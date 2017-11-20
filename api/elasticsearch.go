@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/raintank/tsdb-gw/elasticsearch"
+	"github.com/grafana/worldping-gw/elasticsearch"
 )
 
 func ElasticsearchProxy(c *Context) {

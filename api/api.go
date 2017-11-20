@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/golang/glog"
 	"github.com/gorilla/handlers"
 	"github.com/raintank/tsdb-gw/auth"
-	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/macaron.v1"
 )
 
@@ -29,7 +29,7 @@ type Api struct {
 
 func InitApi() *Api {
 	if *ssl && (*certFile == "" || *keyFile == "") {
-		log.Fatal(4, "cert-file and key-file must be set when using SSL")
+		glog.Fatal("cert-file and key-file must be set when using SSL")
 	}
 	a := &Api{
 		done:       make(chan struct{}),
@@ -44,7 +44,7 @@ func InitApi() *Api {
 	// define our own listner so we can call Close on it
 	l, err := net.Listen("tcp", *addr)
 	if err != nil {
-		log.Fatal(4, err.Error())
+		glog.Fatal(err.Error())
 	}
 	a.l = l
 
@@ -61,7 +61,7 @@ func InitApi() *Api {
 		if *ssl {
 			cert, err := tls.LoadX509KeyPair(*certFile, *keyFile)
 			if err != nil {
-				log.Fatal(4, "Fail to start server: %v", err)
+				glog.Fatalf("Fail to start server: %v", err)
 			}
 			srv.TLSConfig = &tls.Config{
 				Certificates: []tls.Certificate{cert},
@@ -74,7 +74,7 @@ func InitApi() *Api {
 		}
 
 		if err != nil {
-			log.Info(err.Error())
+			glog.Info(err.Error())
 		}
 	}()
 	return a
@@ -90,8 +90,6 @@ func (a *Api) InitRoutes(m *macaron.Macaron) {
 	m.Use(RequestStats())
 
 	m.Get("/", index)
-	m.Post("/metrics/delete", a.Auth(), MetrictankProxy)
-	m.Post("/metrics", a.Auth(), Metrics)
 	m.Post("/events", a.Auth(), Events)
 	m.Any("/graphite/*", a.Auth(), GraphiteProxy)
 	m.Any("/elasticsearch/*", a.Auth(), ElasticsearchProxy)

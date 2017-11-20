@@ -34,7 +34,7 @@ func GetTracer(enabled bool, addr string) (opentracing.Tracer, io.Closer, error)
 	jLogger := jaegerlog.StdLogger
 
 	tracer, closer, err := cfg.New(
-		"tsdb-gw",
+		"worldping-gw",
 		jaegercfg.Logger(jLogger),
 	)
 	if err != nil {

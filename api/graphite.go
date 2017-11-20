@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/raintank/tsdb-gw/graphite"
+	"github.com/grafana/worldping-gw/graphite"
 )
 
 func GraphiteProxy(c *Context) {

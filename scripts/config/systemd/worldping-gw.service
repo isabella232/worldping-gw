@@ -1,0 +1,12 @@
+[Unit]
+Description=HTTP gateway for worldping
+ 
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/worldping-gw "--config=/etc/worldping/gw.ini"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

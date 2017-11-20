@@ -6,7 +6,7 @@ cd ${DIR}
 
 : ${GOPATH:="${HOME}/.go_workspace"}
 : ${ORG_PATH:="github.com/raintank"}
-: ${REPO_PATH:="${ORG_PATH}/tsdb-gw"}
+: ${REPO_PATH:="${ORG_PATH}/worldping-gw"}
 
 export GOPATH
 

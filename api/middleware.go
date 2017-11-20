@@ -11,13 +11,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/golang/glog"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	otLog "github.com/opentracing/opentracing-go/log"
 	"github.com/raintank/metrictank/stats"
 	"github.com/raintank/tsdb-gw/auth"
-	"github.com/raintank/tsdb-gw/usage"
-	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/macaron.v1"
 )
 
@@ -74,7 +73,7 @@ func (a *Api) Auth() macaron.Handler {
 				ctx.JSON(401, err.Error())
 				return
 			}
-			log.Error(3, "failed to perform authentication: %q", err.Error())
+			glog.Errorf("failed to perform authentication: %q", err.Error())
 			ctx.JSON(500, err.Error())
 			return
 		}
@@ -103,7 +102,7 @@ func getApiKey(c *Context) (string, error) {
 	if len(parts) == 2 && parts[0] == "Basic" {
 		decoded, err := base64.StdEncoding.DecodeString(parts[1])
 		if err != nil {
-			log.Warn("Unable to decode basic auth header.", err)
+			glog.Warningf("Unable to decode basic auth header. %s", err)
 			return "", err
 		}
 		userAndPass := strings.SplitN(string(decoded), ":", 2)
@@ -137,7 +136,6 @@ func (r *requestStats) PathStatusCount(ctx *Context, path string, status int) {
 	}
 	r.Unlock()
 	c.Inc()
-	usage.LogRequest(ctx.OrgId, metricKey)
 }
 
 func (r *requestStats) PathLatency(ctx *Context, path string, dur time.Duration) {
@@ -204,7 +202,7 @@ func Tracer() macaron.Handler {
 
 		ext.HTTPMethod.Set(span, macCtx.Req.Method)
 		ext.HTTPUrl.Set(span, macCtx.Req.URL.String())
-		ext.Component.Set(span, "tsdb-gw/api")
+		ext.Component.Set(span, "worldping-gw/api")
 
 		macCtx.Req = macaron.Request{macCtx.Req.WithContext(opentracing.ContextWithSpan(macCtx.Req.Context(), span))}
 		macCtx.Resp = &TracingResponseWriter{

@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 
 	"github.com/codeskyblue/go-uuid"
+	"github.com/golang/glog"
 	"github.com/golang/snappy"
-	"github.com/raintank/tsdb-gw/event_publish"
-	"github.com/raintank/worldping-api/pkg/log"
+	"github.com/grafana/worldping-gw/event_publish"
 	"gopkg.in/raintank/schema.v1"
 	"gopkg.in/raintank/schema.v1/msg"
 )
@@ -33,7 +33,7 @@ func eventsJson(ctx *Context) {
 	if ctx.Req.Request.Body != nil {
 		body, err := ioutil.ReadAll(ctx.Req.Request.Body)
 		if err != nil {
-			log.Error(3, "unable to read request body. %s", err)
+			glog.Errorf("unable to read request body. %s", err)
 		}
 		event := new(schema.ProbeEvent)
 		err = json.Unmarshal(body, event)
@@ -48,9 +48,9 @@ func eventsJson(ctx *Context) {
 		u := uuid.NewUUID()
 		event.Id = u.String()
 
-		err = event_publish.Publish(event)
+		err = event_publish.Publish([]*schema.ProbeEvent{event})
 		if err != nil {
-			log.Error(3, "failed to publish event. %s", err)
+			glog.Errorf("failed to publish event. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
@@ -71,18 +71,18 @@ func eventsBinary(ctx *Context, compressed bool) {
 	if ctx.Req.Request.Body != nil {
 		body, err := ioutil.ReadAll(body)
 		if err != nil {
-			log.Error(3, "unable to read request body. %s", err)
+			glog.Errorf("unable to read request body. %s", err)
 		}
 		ms, err := msg.ProbeEventFromMsg(body)
 		if err != nil {
-			log.Error(3, "event payload not Event. %s", err)
+			glog.Errorf("event payload not Event. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
 
 		err = ms.DecodeProbeEvent()
 		if err != nil {
-			log.Error(3, "failed to unmarshal EventData. %s", err)
+			glog.Errorf("failed to unmarshal EventData. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
@@ -92,9 +92,9 @@ func eventsBinary(ctx *Context, compressed bool) {
 		u := uuid.NewUUID()
 		ms.Event.Id = u.String()
 
-		err = event_publish.Publish(ms.Event)
+		err = event_publish.Publish([]*schema.ProbeEvent{ms.Event})
 		if err != nil {
-			log.Error(3, "failed to publish Event. %s", err)
+			glog.Errorf("failed to publish Event. %s", err)
 			ctx.JSON(500, err)
 			return
 		}

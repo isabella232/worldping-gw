@@ -10,8 +10,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/raintank/tsdb-gw/util"
-	"github.com/raintank/worldping-api/pkg/log"
+	"github.com/golang/glog"
+	"github.com/grafana/worldping-gw/util"
 	"gopkg.in/macaron.v1"
 )
 
@@ -39,7 +39,7 @@ func Proxy(orgId int, c *macaron.Context) {
 		c.JSON(http.StatusBadRequest, fmt.Sprintf("unable to read request body. %s", err))
 		return
 	}
-	log.Debug("search body is: %s", string(searchBody))
+	glog.V(6).Infof("search body is: %s", string(searchBody))
 
 	url := new(url.URL)
 	*url = *ElasticsearchUrl
@@ -96,7 +96,7 @@ type msearchHeader struct {
 
 func validateHeader(header []byte) error {
 	h := msearchHeader{}
-	log.Debug("validating search header: %s", string(header))
+	glog.V(6).Infof("validating search header: %s", string(header))
 	if err := json.Unmarshal(header, &h); err != nil {
 		return err
 	}
