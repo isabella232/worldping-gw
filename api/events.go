@@ -10,8 +10,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/snappy"
 	"github.com/grafana/worldping-gw/event_publish"
-	"gopkg.in/raintank/schema.v1"
-	"gopkg.in/raintank/schema.v1/msg"
+	"github.com/grafana/worldping-gw/msg"
 )
 
 func Events(ctx *Context) {
@@ -35,7 +34,7 @@ func eventsJson(ctx *Context) {
 		if err != nil {
 			glog.Errorf("unable to read request body. %s", err)
 		}
-		event := new(schema.ProbeEvent)
+		event := new(msg.ProbeEvent)
 		err = json.Unmarshal(body, event)
 		if err != nil {
 			ctx.JSON(400, fmt.Sprintf("unable to parse request body. %s", err))
@@ -48,7 +47,7 @@ func eventsJson(ctx *Context) {
 		u := uuid.NewUUID()
 		event.Id = u.String()
 
-		err = event_publish.Publish([]*schema.ProbeEvent{event})
+		err = event_publish.Publish([]*msg.ProbeEvent{event})
 		if err != nil {
 			glog.Errorf("failed to publish event. %s", err)
 			ctx.JSON(500, err)
@@ -73,26 +72,20 @@ func eventsBinary(ctx *Context, compressed bool) {
 		if err != nil {
 			glog.Errorf("unable to read request body. %s", err)
 		}
-		ms, err := msg.ProbeEventFromMsg(body)
+		event, err := msg.ProbeEventFromMsg(body)
 		if err != nil {
 			glog.Errorf("event payload not Event. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
 
-		err = ms.DecodeProbeEvent()
-		if err != nil {
-			glog.Errorf("failed to unmarshal EventData. %s", err)
-			ctx.JSON(500, err)
-			return
-		}
 		if !ctx.IsAdmin {
-			ms.Event.OrgId = int64(ctx.OrgId)
+			event.OrgId = int64(ctx.OrgId)
 		}
 		u := uuid.NewUUID()
-		ms.Event.Id = u.String()
+		event.Id = u.String()
 
-		err = event_publish.Publish([]*schema.ProbeEvent{ms.Event})
+		err = event_publish.Publish([]*msg.ProbeEvent{event})
 		if err != nil {
 			glog.Errorf("failed to publish Event. %s", err)
 			ctx.JSON(500, err)

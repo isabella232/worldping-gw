@@ -220,18 +220,6 @@
 			"path": "gopkg.in/macaron.v1",
 			"revision": "a325110f8b392bce3e5cdeb8c44bf98078ada3be",
 			"revisionTime": "2017-02-13T09:12:08Z"
-		},
-		{
-			"checksumSHA1": "coHpC7KbWRXTjC0JM/bwnBn8zmY=",
-			"path": "gopkg.in/raintank/schema.v1",
-			"revision": "a323316458b5df84827551e9b6b5f61cb2de423b",
-			"revisionTime": "2017-01-12T12:37:55Z"
-		},
-		{
-			"checksumSHA1": "MjwLYwIckCtBwXhQMt5ji/L5lJA=",
-			"path": "gopkg.in/raintank/schema.v1/msg",
-			"revision": "a323316458b5df84827551e9b6b5f61cb2de423b",
-			"revisionTime": "2017-01-12T12:37:55Z"
 		}
 	],
 	"rootPath": "github.com/grafana/worldping-gw"

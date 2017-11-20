@@ -7,9 +7,8 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/golang/glog"
+	"github.com/grafana/worldping-gw/msg"
 	"github.com/raintank/metrictank/stats"
-	"gopkg.in/raintank/schema.v1"
-	"gopkg.in/raintank/schema.v1/msg"
 )
 
 var (
@@ -71,9 +70,14 @@ func Init(broker string) {
 	}
 }
 
-func Publish(events []*schema.ProbeEvent) error {
+func Publish(events []*msg.ProbeEvent) error {
 	if producer == nil {
 		glog.V(6).Info("droping event as publishing is disabled")
+		if glog.V(7) {
+			for _, e := range events {
+				glog.Infof("Event: %+v", e)
+			}
+		}
 		return nil
 	}
 	msgSize := 0
