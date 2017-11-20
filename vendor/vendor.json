@@ -29,12 +29,6 @@
 			"revisionTime": "2017-02-13T07:20:14Z"
 		},
 		{
-			"checksumSHA1": "acGG5NV9NBtjspVlWZ86Zzg8pW8=",
-			"path": "github.com/alyu/configparser",
-			"revision": "26b2fe18bee125de2a3090d6fadb7e280e63eba6",
-			"revisionTime": "2015-11-25T02:12:32Z"
-		},
-		{
 			"checksumSHA1": "n6WHmaVaxufQthaT1tYnqTmtSsY=",
 			"path": "github.com/codeskyblue/go-uuid",
 			"revision": "952abbca900b023c1a80bc522ff4795db50d9d6c",
@@ -47,32 +41,11 @@
 			"revisionTime": "2016-10-29T20:57:26Z"
 		},
 		{
-			"checksumSHA1": "vwGGesK6k8uQgnwew609k9Jvcb8=",
-			"origin": "github.com/raintank/metrictank/vendor/github.com/dgryski/go-bits",
-			"path": "github.com/dgryski/go-bits",
-			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
-			"revisionTime": "2017-08-31T15:46:53Z"
-		},
-		{
 			"checksumSHA1": "e4U50WUz2ycziirb3+JAVz3t49w=",
 			"origin": "github.com/raintank/metrictank/vendor/github.com/dgryski/go-linlog",
 			"path": "github.com/dgryski/go-linlog",
 			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
 			"revisionTime": "2017-06-01T08:43:28Z"
-		},
-		{
-			"checksumSHA1": "bJkM/x02zeuwA6avbGn2yvqjp20=",
-			"origin": "github.com/raintank/metrictank/vendor/github.com/dgryski/go-tsz",
-			"path": "github.com/dgryski/go-tsz",
-			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
-			"revisionTime": "2017-08-31T15:46:53Z"
-		},
-		{
-			"checksumSHA1": "dn4hgSC9vkkMREpbcoMihPGCA88=",
-			"origin": "github.com/raintank/metrictank/vendor/github.com/dgryski/go-tsz/testdata",
-			"path": "github.com/dgryski/go-tsz/testdata",
-			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
-			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
 			"checksumSHA1": "y2Kh4iPlgCPXSGTCcFpzePYdzzg=",
@@ -141,12 +114,6 @@
 			"revisionTime": "2017-05-03T22:40:06Z"
 		},
 		{
-			"checksumSHA1": "j4CCNdvlzHLOMA7gyS7wzIfwBTw=",
-			"path": "github.com/metrics20/go-metrics20/carbon20",
-			"revision": "55e770486f161cc83baf4e7178f7bb928dbc5716",
-			"revisionTime": "2017-08-11T09:14:05Z"
-		},
-		{
 			"checksumSHA1": "mbhJnsNwGAwkTQH5c2hVRO9YmxA=",
 			"path": "github.com/philhofer/fwd",
 			"revision": "98c11a7a6ec829d672b03833c3d69a7fae1ca972",
@@ -165,46 +132,22 @@
 			"revisionTime": "2016-01-12T16:53:51Z"
 		},
 		{
-			"checksumSHA1": "XEelmF21xs8SaseO6IX++VnXHwI=",
-			"path": "github.com/raintank/dur",
-			"revision": "783f098260f36002ce9ab0f77dc1a1b344032b42",
-			"revisionTime": "2017-07-09T09:05:02Z"
-		},
-		{
-			"checksumSHA1": "JjEvruL5CkxDFwQFCp6nk7ik864=",
-			"path": "github.com/raintank/metrictank/cluster/partitioner",
-			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
-			"revisionTime": "2017-06-01T08:43:28Z"
-		},
-		{
-			"checksumSHA1": "SPHLt6V8DpIwSnSUu8GEd1DxxJ4=",
-			"path": "github.com/raintank/metrictank/conf",
-			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
-			"revisionTime": "2017-08-31T15:46:53Z"
-		},
-		{
-			"checksumSHA1": "hK4POSb6q8utNbjmIIiSQiwgobA=",
-			"path": "github.com/raintank/metrictank/mdata/chunk",
-			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
-			"revisionTime": "2017-08-31T15:46:53Z"
-		},
-		{
 			"checksumSHA1": "z8tyaX1kWYzQELcDNg/sPZtMnbs=",
 			"path": "github.com/raintank/metrictank/stats",
-			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
-			"revisionTime": "2017-06-01T08:43:28Z"
-		},
-		{
-			"checksumSHA1": "s9JuMhR0PcshihIiHbwcVzPI/EU=",
-			"path": "github.com/raintank/metrictank/util",
-			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
-			"revisionTime": "2017-08-31T15:46:53Z"
+			"revision": "cc0abdaf532ee63ff2ed0b6742d462991089f04d",
+			"revisionTime": "2017-08-30T21:26:43Z"
 		},
 		{
 			"checksumSHA1": "YP5MOKpfFQiS6F12th9I8hlI5EE=",
 			"path": "github.com/raintank/raintank-apps/pkg/auth",
 			"revision": "6bf25870e4795026c75afb6714849f74a0db7007",
 			"revisionTime": "2017-05-23T17:28:40Z"
+		},
+		{
+			"checksumSHA1": "Ev8YA7Kr3AZqcId4LnRaq8zwxUA=",
+			"path": "github.com/raintank/tsdb-gw/auth",
+			"revision": "54ab75ce52d9760e9bbd9a85360129fc270cb79b",
+			"revisionTime": "2017-11-20T06:40:51Z"
 		},
 		{
 			"checksumSHA1": "oCMADD0xqElYRIXBgNkBGHXGQyk=",
@@ -291,5 +234,5 @@
 			"revisionTime": "2017-01-12T12:37:55Z"
 		}
 	],
-	"rootPath": "github.com/raintank/tsdb-gw"
+	"rootPath": "github.com/grafana/worldping-gw"
 }
