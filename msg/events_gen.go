@@ -650,3 +650,120 @@ func (z *ProbeEventJson) Msgsize() (s int) {
 	}
 	return
 }
+
+// DecodeMsg implements msgp.Decodable
+func (z *ProbeEvents) DecodeMsg(dc *msgp.Reader) (err error) {
+	var zrsw uint32
+	zrsw, err = dc.ReadArrayHeader()
+	if err != nil {
+		return
+	}
+	if cap((*z)) >= int(zrsw) {
+		(*z) = (*z)[:zrsw]
+	} else {
+		(*z) = make(ProbeEvents, zrsw)
+	}
+	for zeff := range *z {
+		if dc.IsNil() {
+			err = dc.ReadNil()
+			if err != nil {
+				return
+			}
+			(*z)[zeff] = nil
+		} else {
+			if (*z)[zeff] == nil {
+				(*z)[zeff] = new(ProbeEvent)
+			}
+			err = (*z)[zeff].DecodeMsg(dc)
+			if err != nil {
+				return
+			}
+		}
+	}
+	return
+}
+
+// EncodeMsg implements msgp.Encodable
+func (z ProbeEvents) EncodeMsg(en *msgp.Writer) (err error) {
+	err = en.WriteArrayHeader(uint32(len(z)))
+	if err != nil {
+		return
+	}
+	for zxpk := range z {
+		if z[zxpk] == nil {
+			err = en.WriteNil()
+			if err != nil {
+				return
+			}
+		} else {
+			err = z[zxpk].EncodeMsg(en)
+			if err != nil {
+				return
+			}
+		}
+	}
+	return
+}
+
+// MarshalMsg implements msgp.Marshaler
+func (z ProbeEvents) MarshalMsg(b []byte) (o []byte, err error) {
+	o = msgp.Require(b, z.Msgsize())
+	o = msgp.AppendArrayHeader(o, uint32(len(z)))
+	for zxpk := range z {
+		if z[zxpk] == nil {
+			o = msgp.AppendNil(o)
+		} else {
+			o, err = z[zxpk].MarshalMsg(o)
+			if err != nil {
+				return
+			}
+		}
+	}
+	return
+}
+
+// UnmarshalMsg implements msgp.Unmarshaler
+func (z *ProbeEvents) UnmarshalMsg(bts []byte) (o []byte, err error) {
+	var zobc uint32
+	zobc, bts, err = msgp.ReadArrayHeaderBytes(bts)
+	if err != nil {
+		return
+	}
+	if cap((*z)) >= int(zobc) {
+		(*z) = (*z)[:zobc]
+	} else {
+		(*z) = make(ProbeEvents, zobc)
+	}
+	for zdnj := range *z {
+		if msgp.IsNil(bts) {
+			bts, err = msgp.ReadNilBytes(bts)
+			if err != nil {
+				return
+			}
+			(*z)[zdnj] = nil
+		} else {
+			if (*z)[zdnj] == nil {
+				(*z)[zdnj] = new(ProbeEvent)
+			}
+			bts, err = (*z)[zdnj].UnmarshalMsg(bts)
+			if err != nil {
+				return
+			}
+		}
+	}
+	o = bts
+	return
+}
+
+// Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
+func (z ProbeEvents) Msgsize() (s int) {
+	s = msgp.ArrayHeaderSize
+	for zsnv := range z {
+		if z[zsnv] == nil {
+			s += msgp.NilSize
+		} else {
+			s += z[zsnv].Msgsize()
+		}
+	}
+	return
+}

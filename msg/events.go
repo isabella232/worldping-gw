@@ -7,8 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/codeskyblue/go-uuid"
+	"time"
 )
 
 var errTooSmall = errors.New("too small")
@@ -22,6 +21,7 @@ type Format uint8
 const (
 	FormatProbeEventJson Format = iota
 	FormatProbeEventMsgp
+	FormatProbeEventsMsgp
 )
 
 //go:generate msgp
@@ -35,6 +35,8 @@ type ProbeEvent struct {
 	Message   string            `json:"message"`
 	Tags      map[string]string `json:"tags"`
 }
+
+type ProbeEvents []*ProbeEvent
 
 func (e *ProbeEvent) Validate() error {
 	if e.EventType == "" || e.OrgId == 0 || e.Source == "" || e.Timestamp == 0 || e.Message == "" {
@@ -67,7 +69,7 @@ type ProbeEventJson struct {
 // 0    : messgae format
 // 1-9  : transmit timestamp 64bit Nanosecond Epoch TS (not used)
 // 10-> : message body
-func ProbeEventFromMsg(msg []byte) (*ProbeEvent, error) {
+func ProbeEventsFromMsg(msg []byte) ([]*ProbeEvent, error) {
 	if len(msg) < 9 {
 		return nil, errTooSmall
 	}
@@ -77,7 +79,7 @@ func ProbeEventFromMsg(msg []byte) (*ProbeEvent, error) {
 		return nil, fmt.Errorf(errFmtUnknownFormat, format)
 	}
 
-	var e *ProbeEvent
+	events := ProbeEvents(make([]*ProbeEvent, 0))
 	switch format {
 	case FormatProbeEventJson:
 		oldFormat := &ProbeEventJson{}
@@ -92,7 +94,7 @@ func ProbeEventFromMsg(msg []byte) (*ProbeEvent, error) {
 			parts := strings.SplitN(t, ":", 2)
 			tags[parts[0]] = parts[1]
 		}
-		e = &ProbeEvent{
+		events = append(events, &ProbeEvent{
 			Id:        oldFormat.Id,
 			EventType: oldFormat.EventType,
 			OrgId:     oldFormat.OrgId,
@@ -101,26 +103,26 @@ func ProbeEventFromMsg(msg []byte) (*ProbeEvent, error) {
 			Timestamp: oldFormat.Timestamp,
 			Message:   oldFormat.Message,
 			Tags:      tags,
-		}
+		})
 	case FormatProbeEventMsgp:
-		e = new(ProbeEvent)
+		e := new(ProbeEvent)
 		_, err := e.UnmarshalMsg(msg[9:])
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, e)
+	case FormatProbeEventsMsgp:
+		_, err := events.UnmarshalMsg(msg[9:])
 		if err != nil {
 			return nil, err
 		}
 	default:
 		return nil, fmt.Errorf(errFmtUnknownFormat, msg[0])
 	}
-	return e, nil
+	return events, nil
 }
 
 func CreateProbeEventMsg(event *ProbeEvent, id int64, version Format) ([]byte, error) {
-	if event.Id == "" {
-		// per http://blog.mikemccandless.com/2014/05/choosing-fast-unique-identifier-uuid.html,
-		// using V1 UUIDs is much faster than v4 like we were using
-		u := uuid.NewUUID()
-		event.Id = u.String()
-	}
 	buf := new(bytes.Buffer)
 	err := binary.Write(buf, binary.LittleEndian, uint8(version))
 	if err != nil {
@@ -139,6 +141,30 @@ func CreateProbeEventMsg(event *ProbeEvent, id int64, version Format) ([]byte, e
 	default:
 		return nil, fmt.Errorf(errFmtUnknownFormat, version)
 	}
+	if err != nil {
+		return nil, fmt.Errorf("Failed to marshal metrics payload: %s", err)
+	}
+	_, err = buf.Write(msg)
+	if err != nil {
+		return nil, fmt.Errorf(errFmtBinWriteFailed, err)
+	}
+	return buf.Bytes(), nil
+}
+
+func CreateProbeEventsMsg(events []*ProbeEvent) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	err := binary.Write(buf, binary.LittleEndian, uint8(FormatProbeEventsMsgp))
+	if err != nil {
+		return nil, fmt.Errorf(errFmtBinWriteFailed, err)
+	}
+	id := time.Now().UnixNano()
+	err = binary.Write(buf, binary.BigEndian, id)
+	if err != nil {
+		return nil, fmt.Errorf(errFmtBinWriteFailed, err)
+	}
+	var msg []byte
+
+	msg, err = ProbeEvents(events).MarshalMsg(nil)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to marshal metrics payload: %s", err)
 	}

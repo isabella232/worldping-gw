@@ -72,20 +72,21 @@ func eventsBinary(ctx *Context, compressed bool) {
 		if err != nil {
 			glog.Errorf("unable to read request body. %s", err)
 		}
-		event, err := msg.ProbeEventFromMsg(body)
+		events, err := msg.ProbeEventsFromMsg(body)
 		if err != nil {
 			glog.Errorf("event payload not Event. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
-
-		if !ctx.IsAdmin {
-			event.OrgId = int64(ctx.OrgId)
+		for _, event := range events {
+			if !ctx.IsAdmin {
+				event.OrgId = int64(ctx.OrgId)
+			}
+			u := uuid.NewUUID()
+			event.Id = u.String()
 		}
-		u := uuid.NewUUID()
-		event.Id = u.String()
 
-		err = event_publish.Publish([]*msg.ProbeEvent{event})
+		err = event_publish.Publish(events)
 		if err != nil {
 			glog.Errorf("failed to publish Event. %s", err)
 			ctx.JSON(500, err)
