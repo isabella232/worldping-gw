@@ -76,7 +76,7 @@ func main() {
 
 	_, traceCloser, err := util.GetTracer(*tracingEnabled, *tracingAddr)
 	if err != nil {
-		glog.Fatal("Could not initialize jaeger tracer: %s", err.Error())
+		glog.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
 	}
 	defer traceCloser.Close()
 
