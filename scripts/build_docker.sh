@@ -10,5 +10,5 @@ VERSION=`git describe --always`
 mkdir build
 cp ../build/* build/
 
-docker build -t raintank/worldping-gw:$VERSION .
-docker tag raintank/worldping-gw:$VERSION raintank/worldping-gw:latest
+docker build -t grafana/worldping-gw:$VERSION .
+docker tag grafana/worldping-gw:$VERSION grafana/worldping-gw:latest
