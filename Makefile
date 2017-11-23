@@ -1,7 +1,7 @@
 default:
 	$(MAKE) all
 test:
-	bash -c "go test ./..."
+	bash -c "./scripts/test.sh"
 build:
 	bash -c "./scripts/build.sh"
 docker:
