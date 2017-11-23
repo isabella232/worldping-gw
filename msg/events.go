@@ -75,7 +75,7 @@ func ProbeEventsFromMsg(msg []byte) ([]*ProbeEvent, error) {
 	}
 
 	format := Format(msg[0])
-	if format != FormatProbeEventJson && format != FormatProbeEventMsgp {
+	if format != FormatProbeEventJson && format != FormatProbeEventMsgp && format != FormatProbeEventsMsgp {
 		return nil, fmt.Errorf(errFmtUnknownFormat, format)
 	}
 

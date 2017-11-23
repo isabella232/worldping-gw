@@ -17,9 +17,9 @@ func Events(ctx *Context) {
 	contentType := ctx.Req.Header.Get("Content-Type")
 	switch contentType {
 	case "rt-metric-binary":
-		eventsBinary(ctx, false)
+		eventsMsgp(ctx, false)
 	case "rt-metric-binary-snappy":
-		eventsBinary(ctx, true)
+		eventsMsgp(ctx, true)
 	case "application/json":
 		eventsJson(ctx)
 	default:
@@ -59,7 +59,7 @@ func eventsJson(ctx *Context) {
 	ctx.JSON(400, "no data included in request.")
 }
 
-func eventsBinary(ctx *Context, compressed bool) {
+func eventsMsgp(ctx *Context, compressed bool) {
 	var body io.ReadCloser
 	if compressed {
 		body = ioutil.NopCloser(snappy.NewReader(ctx.Req.Request.Body))
