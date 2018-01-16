@@ -12,12 +12,14 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/grafana/globalconf"
+	"github.com/grafana/metrictank/stats"
 	"github.com/grafana/worldping-gw/api"
 	"github.com/grafana/worldping-gw/elasticsearch"
 	"github.com/grafana/worldping-gw/event_publish"
 	"github.com/grafana/worldping-gw/graphite"
+	"github.com/grafana/worldping-gw/metric_publish"
+	"github.com/grafana/worldping-gw/usage"
 	"github.com/grafana/worldping-gw/util"
-	"github.com/raintank/metrictank/stats"
 )
 
 var (
@@ -37,6 +39,9 @@ var (
 	worldpingUrl     = flag.String("worldping-url", "", "worldping-api address")
 	elasticsearchUrl = flag.String("elasticsearch-url", "http://localhost:9200", "elasticsearch server address")
 	esIndex          = flag.String("es-index", "events", "elasticsearch index name")
+
+	tsdbStatsEnabled = flag.Bool("tsdb-stats-enabled", false, "enable collecting usage stats")
+	tsdbStatsAddr    = flag.String("tsdb-stats-addr", "localhost:2004", "tsdb-usage server address")
 
 	tracingEnabled = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
 	tracingAddr    = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
@@ -74,6 +79,13 @@ func main() {
 		stats.NewDevnull()
 	}
 
+	if *tsdbStatsEnabled {
+		err := usage.Init(*tsdbStatsAddr)
+		if err != nil {
+			glog.Fatal(4, "failed to initialize usage stats. %s", err.Error())
+		}
+	}
+
 	_, traceCloser, err := util.GetTracer(*tracingEnabled, *tracingAddr)
 	if err != nil {
 		glog.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
@@ -81,6 +93,7 @@ func main() {
 	defer traceCloser.Close()
 
 	event_publish.Init(*broker)
+	metric_publish.Init(*broker)
 
 	if err := graphite.Init(*graphiteUrl, *worldpingUrl); err != nil {
 		glog.Fatal(err.Error())

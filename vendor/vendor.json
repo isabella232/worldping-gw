@@ -108,6 +108,18 @@
 			"revisionTime": "2017-05-23T21:16:22Z"
 		},
 		{
+			"checksumSHA1": "KKmDpHQD1VK6ryXdZFBud8asZ/E=",
+			"path": "github.com/grafana/metrictank/cluster/partitioner",
+			"revision": "1d20a29c87f410e578d76bf304ed42bed1101579",
+			"revisionTime": "2018-01-16T04:25:38Z"
+		},
+		{
+			"checksumSHA1": "CN8+3osIDyJeSOGhRPgeubTw0Bs=",
+			"path": "github.com/grafana/metrictank/stats",
+			"revision": "1d20a29c87f410e578d76bf304ed42bed1101579",
+			"revisionTime": "2018-01-16T04:25:38Z"
+		},
+		{
 			"checksumSHA1": "Js/yx9fZ3+wH1wZpHNIxSTMIaCg=",
 			"path": "github.com/jtolds/gls",
 			"revision": "77f18212c9c7edc9bd6a33d383a7b545ce62f064",
@@ -146,8 +158,8 @@
 		{
 			"checksumSHA1": "Ev8YA7Kr3AZqcId4LnRaq8zwxUA=",
 			"path": "github.com/raintank/tsdb-gw/auth",
-			"revision": "54ab75ce52d9760e9bbd9a85360129fc270cb79b",
-			"revisionTime": "2017-11-20T06:40:51Z"
+			"revision": "fdf757e6b8c9aecdef20db26dd5a138776b32035",
+			"revisionTime": "2017-09-02T11:32:49Z"
 		},
 		{
 			"checksumSHA1": "oCMADD0xqElYRIXBgNkBGHXGQyk=",
@@ -220,6 +232,19 @@
 			"path": "gopkg.in/macaron.v1",
 			"revision": "a325110f8b392bce3e5cdeb8c44bf98078ada3be",
 			"revisionTime": "2017-02-13T09:12:08Z"
+		},
+		{
+			"checksumSHA1": "coHpC7KbWRXTjC0JM/bwnBn8zmY=",
+			"origin": "github.com/raintank/tsdb-gw/vendor/gopkg.in/raintank/schema.v1",
+			"path": "gopkg.in/raintank/schema.v1",
+			"revision": "a323316458b5df84827551e9b6b5f61cb2de423b",
+			"revisionTime": "2017-01-12T12:37:55Z"
+		},
+		{
+			"checksumSHA1": "MjwLYwIckCtBwXhQMt5ji/L5lJA=",
+			"path": "gopkg.in/raintank/schema.v1/msg",
+			"revision": "a323316458b5df84827551e9b6b5f61cb2de423b",
+			"revisionTime": "2017-01-12T12:37:55Z"
 		}
 	],
 	"rootPath": "github.com/grafana/worldping-gw"

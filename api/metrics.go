@@ -6,10 +6,10 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/golang/glog"
 	"github.com/golang/snappy"
-	"github.com/raintank/metrictank/stats"
-	"github.com/raintank/tsdb-gw/metric_publish"
-	"github.com/raintank/worldping-api/pkg/log"
+	"github.com/grafana/metrictank/stats"
+	"github.com/grafana/worldping-gw/metric_publish"
 	"gopkg.in/raintank/schema.v1"
 	"gopkg.in/raintank/schema.v1/msg"
 )
@@ -38,7 +38,7 @@ func metricsJson(ctx *Context) {
 	if ctx.Req.Request.Body != nil {
 		body, err := ioutil.ReadAll(ctx.Req.Request.Body)
 		if err != nil {
-			log.Error(3, "unable to read request body. %s", err)
+			glog.Errorf("unable to read request body. %s", err)
 		}
 		metrics := make([]*schema.MetricData, 0)
 		err = json.Unmarshal(body, &metrics)
@@ -81,7 +81,7 @@ func metricsJson(ctx *Context) {
 		metricsValid.Add(len(metrics))
 		err = metric_publish.Publish(metrics)
 		if err != nil {
-			log.Error(3, "failed to publish metrics. %s", err)
+			glog.Errorf("failed to publish metrics. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
@@ -103,21 +103,21 @@ func metricsBinary(ctx *Context, compressed bool) {
 	if ctx.Req.Request.Body != nil {
 		body, err := ioutil.ReadAll(body)
 		if err != nil {
-			log.Error(3, "unable to read request body. %s", err)
+			glog.Errorf("unable to read request body. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
 		metricData := new(msg.MetricData)
 		err = metricData.InitFromMsg(body)
 		if err != nil {
-			log.Error(3, "payload not metricData. %s", err)
+			glog.Errorf("payload not metricData. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
 
 		err = metricData.DecodeMetricData()
 		if err != nil {
-			log.Error(3, "failed to unmarshal metricData. %s", err)
+			glog.Errorf("failed to unmarshal metricData. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
@@ -157,7 +157,7 @@ func metricsBinary(ctx *Context, compressed bool) {
 		metricsValid.Add(len(metricData.Metrics))
 		err = metric_publish.Publish(metricData.Metrics)
 		if err != nil {
-			log.Error(3, "failed to publish metrics. %s", err)
+			glog.Errorf("failed to publish metrics. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
