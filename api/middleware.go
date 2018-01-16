@@ -175,9 +175,11 @@ func RequestStats() macaron.Handler {
 		// have completed and the request has been sent.
 		ctx.Next()
 		status := rw.Status()
-		path := pathSlug(ctx.Req.URL.Path)
-		stats.PathStatusCount(ctx, path, status)
-		stats.PathLatency(ctx, path, time.Since(start))
+		if status != http.StatusNotFound {
+			path := pathSlug(ctx.Req.URL.Path)
+			stats.PathStatusCount(ctx, path, status)
+			stats.PathLatency(ctx, path, time.Since(start))
+		}
 		// only record the request size if the request succeeded.
 		if status < 300 {
 			stats.PathSize(ctx, path, rw.Size())
