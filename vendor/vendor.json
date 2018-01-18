@@ -4,17 +4,15 @@
 	"package": [
 		{
 			"checksumSHA1": "vPAHn6NQfXwZmzal7YBN93Fnd6I=",
-			"origin": "github.com/raintank/metrictank/vendor/github.com/Dieterbe/artisanalhistogram/hist12h",
 			"path": "github.com/Dieterbe/artisanalhistogram/hist12h",
-			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
-			"revisionTime": "2017-06-01T08:43:28Z"
+			"revision": "f61b7225d304620f6f2c5cbb21435d0957115429",
+			"revisionTime": "2017-06-19T07:25:13Z"
 		},
 		{
-			"checksumSHA1": "1XTRa3K5n8OmWeUBsG8MHyHzDGM=",
-			"origin": "github.com/raintank/metrictank/vendor/github.com/Dieterbe/artisanalhistogram/hist15s",
+			"checksumSHA1": "sO2Jc6iEzR2DSbHVJcFrcPVCGSo=",
 			"path": "github.com/Dieterbe/artisanalhistogram/hist15s",
-			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
-			"revisionTime": "2017-06-01T08:43:28Z"
+			"revision": "f61b7225d304620f6f2c5cbb21435d0957115429",
+			"revisionTime": "2017-06-19T07:25:13Z"
 		},
 		{
 			"checksumSHA1": "50/2Bv2EHsoyhrd7ddZKIFMIkoo=",
@@ -42,10 +40,9 @@
 		},
 		{
 			"checksumSHA1": "e4U50WUz2ycziirb3+JAVz3t49w=",
-			"origin": "github.com/raintank/metrictank/vendor/github.com/dgryski/go-linlog",
 			"path": "github.com/dgryski/go-linlog",
-			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
-			"revisionTime": "2017-06-01T08:43:28Z"
+			"revision": "e9bcf94ba223fb1aac64260d0603998c6ec34bd4",
+			"revisionTime": "2017-05-14T10:33:45Z"
 		},
 		{
 			"checksumSHA1": "y2Kh4iPlgCPXSGTCcFpzePYdzzg=",
@@ -116,8 +113,8 @@
 		{
 			"checksumSHA1": "CN8+3osIDyJeSOGhRPgeubTw0Bs=",
 			"path": "github.com/grafana/metrictank/stats",
-			"revision": "1d20a29c87f410e578d76bf304ed42bed1101579",
-			"revisionTime": "2018-01-16T04:25:38Z"
+			"revision": "d826477c6c09c1ef6521971992e6793119084e63",
+			"revisionTime": "2018-01-16T18:51:50Z"
 		},
 		{
 			"checksumSHA1": "Js/yx9fZ3+wH1wZpHNIxSTMIaCg=",
@@ -144,12 +141,6 @@
 			"revisionTime": "2016-01-12T16:53:51Z"
 		},
 		{
-			"checksumSHA1": "z8tyaX1kWYzQELcDNg/sPZtMnbs=",
-			"path": "github.com/raintank/metrictank/stats",
-			"revision": "cc0abdaf532ee63ff2ed0b6742d462991089f04d",
-			"revisionTime": "2017-08-30T21:26:43Z"
-		},
-		{
 			"checksumSHA1": "YP5MOKpfFQiS6F12th9I8hlI5EE=",
 			"path": "github.com/raintank/raintank-apps/pkg/auth",
 			"revision": "6bf25870e4795026c75afb6714849f74a0db7007",
@@ -168,10 +159,10 @@
 			"revisionTime": "2017-05-24T16:52:00Z"
 		},
 		{
-			"checksumSHA1": "dEW9QV7UQKqV5ZxznFV7uri1tFM=",
+			"checksumSHA1": "6u6M+ydTkWgOlM+UK+wOYnHhpAU=",
 			"path": "github.com/rcrowley/go-metrics",
-			"revision": "1f30fe9094a513ce4c700b9a54458bbb0c96996c",
-			"revisionTime": "2016-11-28T21:05:44Z"
+			"revision": "e181e095bae94582363434144c61a9653aff6e50",
+			"revisionTime": "2017-11-28T17:04:26Z"
 		},
 		{
 			"checksumSHA1": "AikWjAOvWHSJ8G1iU+wNReZnyCk=",

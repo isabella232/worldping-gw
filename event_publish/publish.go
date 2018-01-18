@@ -7,8 +7,8 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/golang/glog"
+	"github.com/grafana/metrictank/stats"
 	"github.com/grafana/worldping-gw/msg"
-	"github.com/raintank/metrictank/stats"
 )
 
 var (
