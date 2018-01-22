@@ -60,6 +60,7 @@ func metricsJson(ctx *Context) {
 					ctx.JSON(400, err.Error())
 					return
 				}
+				m.SetId()
 			}
 		} else {
 			for _, m := range metrics {
@@ -136,6 +137,7 @@ func metricsBinary(ctx *Context, compressed bool) {
 					ctx.JSON(400, err.Error())
 					return
 				}
+				m.SetId()
 			}
 		} else {
 			for _, m := range metricData.Metrics {
