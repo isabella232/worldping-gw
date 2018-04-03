@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -17,6 +18,7 @@ import (
 var (
 	metricsValid    = stats.NewCounter32("metrics.http.valid")
 	metricsRejected = stats.NewCounter32("metrics.http.rejected")
+	publicOrgId     = flag.Int("public-org", -1, "orgId for public metrics")
 )
 
 func Metrics(ctx *Context) {
@@ -55,12 +57,23 @@ func metricsJson(ctx *Context) {
 					m.Mtype = "gauge"
 				}
 				m.Tags = nil
+
 				if err := m.Validate(); err != nil {
 					metricsRejected.Add(len(metrics))
 					ctx.JSON(400, err.Error())
 					return
 				}
+
 				m.SetId()
+
+				// if this is a public metric, lets create a copy that
+				// uses the updated publicOrgId
+				if m.OrgId == -1 && *publicOrgId != -1 {
+					public := *m
+					m.OrgId = *publicOrgId
+					public.SetId()
+					metrics = append(metrics, &public)
+				}
 			}
 		} else {
 			for _, m := range metrics {
@@ -137,7 +150,17 @@ func metricsBinary(ctx *Context, compressed bool) {
 					ctx.JSON(400, err.Error())
 					return
 				}
+
 				m.SetId()
+
+				// if this is a public metric, lets create a copy that
+				// uses the updated publicOrgId
+				if m.OrgId == -1 && *publicOrgId != -1 {
+					public := *m
+					m.OrgId = *publicOrgId
+					public.SetId()
+					metricData.Metrics = append(metricData.Metrics, &public)
+				}
 			}
 		} else {
 			for _, m := range metricData.Metrics {
