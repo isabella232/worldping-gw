@@ -6,7 +6,7 @@ To test event querying you need an Elasticsearch server
 
 The easiest solution for an Elasticsearch server is to use docker.
 ```
-docker run -d -p 9200:9200 --name elasticsearch elasticsearch:2.3 
+docker run -d -p 9200:9200 --name elasticsearch elasticsearch:2.6 
 ```
 
 ### load fake data
@@ -14,9 +14,9 @@ docker run -d -p 9200:9200 --name elasticsearch elasticsearch:2.3
 ./scripts/load_events.sh --addr localhost:9200 --org 1 --endpoint google_com --probe new-york --type http --count 10
 ```
 
-### run tsdb-gw
+### run worldping-gw
 ```
-tsdb-gw -elasticsearch-url=http://localhost:9200 -admin-key=secret -addr :8080
+worldping-gw -elasticsearch-url=http://localhost:9200 -admin-key=secret -addr :8080
 ```
 
 ### start grafana
@@ -28,7 +28,7 @@ docker run -d --name grafana -p 3000:3000 grafana/grafana
 
 You can now add a datasource to grafana with the following settings
 ```
-Name: tsdbgw
+Name: worldping-gw
 Type: ElasticSearch
 Url: http://172.17.0.1:8080/elasticsearch
 Access: direct

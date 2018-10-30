@@ -19,5 +19,5 @@ mkdir -p $BUILDDIR
 rm -rf $BUILDDIR/*
 
 # Build binary
-cd ../
+cd ../cmd/worldping-gw
 go build -ldflags "-X main.GitHash=$GITVERSION" -o $BUILDDIR/worldping-gw
