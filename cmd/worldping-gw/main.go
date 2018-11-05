@@ -186,5 +186,5 @@ func initRoutes(a *api.Api, enforceRoles bool) {
 	a.Router.Post("/events")
 
 	a.Router.Post("/events", a.GenerateHandlers("write", enforceRoles, false, eventsIngest.Events)...)
-	a.Router.Post("/elasticsearch/*", a.GenerateHandlers("read", enforceRoles, false, elasticsearch.ElasticsearchProxy)...)
+	a.Router.Any("/elasticsearch/*", a.GenerateHandlers("read", enforceRoles, false, elasticsearch.ElasticsearchProxy)...)
 }
