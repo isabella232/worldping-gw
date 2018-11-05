@@ -30,7 +30,7 @@ func init() {
 	flag.StringVar(&topic, "events-topic", "events", "Kafka topic for events")
 	flag.BoolVar(&enabled, "events-publish", false, "enable event publishing")
 	flag.StringVar(&codec, "events-compression", "none", "compression: none|gzip|snappy")
-	flag.StringVar(&kafkaVersionStr, "kafka-version", "0.10.0.0", "Kafka version in semver format. All brokers must be this version or newer.")
+	flag.StringVar(&kafkaVersionStr, "events-kafka-version", "0.10.0.0", "Kafka version in semver format. All brokers must be this version or newer.")
 }
 
 func getCompression(codec string) sarama.CompressionCodec {
