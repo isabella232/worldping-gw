@@ -2,9 +2,16 @@
 
 # Jaeger Bindings for Go OpenTracing API
 
-This is a client side library that implements an
-[OpenTracing](http://opentracing.io) Tracer,
-with Zipkin-compatible data model.
+Instrumentation library that implements an
+[OpenTracing](http://opentracing.io) Tracer for Jaeger (https://jaegertracing.io).
+
+**IMPORTANT**: The library's import path is based on its original location under `github.com/uber`. Do not try to import it as `github.com/jaegertracing`, it will not compile. We might revisit this in the next major release.
+  * :white_check_mark: `import "github.com/uber/jaeger-client-go"`
+  * :x: `import "github.com/jaegertracing/jaeger-client-go"`
+
+## How to Contribute
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Installation
 
@@ -19,7 +26,7 @@ For example, Jaeger backend imports this library like this:
 
 If you instead want to use the latest version in `master`, you can pull it via `go get`.
 Note that during `go get` you may see build errors due to incompatible dependencies, which is why
-we recommend using semantic versions for dependencioes.  The error  may be fixed by running
+we recommend using semantic versions for dependencies.  The error  may be fixed by running
 `make install` (it will install `glide` if you don't have it):
 
 ```shell
@@ -34,14 +41,45 @@ make install
 See tracer initialization examples in [godoc](https://godoc.org/github.com/uber/jaeger-client-go/config#pkg-examples)
 and [config/example_test.go](./config/example_test.go).
 
+### Environment variables
+
+The tracer can be initialized with values coming from environment variables. None of the env vars are required
+and all of them can be overriden via direct setting of the property on the configuration object.
+
+Property| Description
+--- | ---
+JAEGER_SERVICE_NAME | The service name
+JAEGER_AGENT_HOST | The hostname for communicating with agent via UDP
+JAEGER_AGENT_PORT | The port for communicating with agent via UDP
+JAEGER_ENDPOINT | The HTTP endpoint for sending spans directly to a collector, i.e. http://jaeger-collector:14268/api/traces
+JAEGER_USER | Username to send as part of "Basic" authentication to the collector endpoint
+JAEGER_PASSWORD | Password to send as part of "Basic" authentication to the collector endpoint
+JAEGER_REPORTER_LOG_SPANS | Whether the reporter should also log the spans
+JAEGER_REPORTER_MAX_QUEUE_SIZE | The reporter's maximum queue size
+JAEGER_REPORTER_FLUSH_INTERVAL | The reporter's flush interval, with units, e.g. "500ms" or "2s" ([valid units][timeunits])
+JAEGER_SAMPLER_TYPE | The sampler type
+JAEGER_SAMPLER_PARAM | The sampler parameter (number)
+JAEGER_SAMPLER_MANAGER_HOST_PORT | The HTTP endpoint when using the remote sampler, i.e. http://jaeger-agent:5778/sampling
+JAEGER_SAMPLER_MAX_OPERATIONS | The maximum number of operations that the sampler will keep track of
+JAEGER_SAMPLER_REFRESH_INTERVAL | How often the remotely controlled sampler will poll jaeger-agent for the appropriate sampling strategy, with units, e.g. "1m" or "30s" ([valid units][timeunits])
+JAEGER_TAGS | A comma separated list of `name = value` tracer level tags, which get added to all reported spans. The value can also refer to an environment variable using the format `${envVarName:default}`, where the `:default` is optional, and identifies a value to be used if the environment variable cannot be found
+JAEGER_DISABLED | Whether the tracer is disabled or not. If true, the default `opentracing.NoopTracer` is used.
+JAEGER_RPC_METRICS | Whether to store RPC metrics
+
+By default, the client sends traces via UDP to the agent at `localhost:6831`. Use `JAEGER_AGENT_HOST` and
+`JAEGER_AGENT_PORT` to send UDP traces to a different `host:port`. If `JAEGER_ENDPOINT` is set, the client sends traces
+to the endpoint via `HTTP`, making the `JAEGER_AGENT_HOST` and `JAEGER_AGENT_PORT` unused. If `JAEGER_ENDPOINT` is
+secured, HTTP basic authentication can be performed by setting the `JAEGER_USER` and `JAEGER_PASSWORD` environment
+variables.
+
 ### Closing the tracer via `io.Closer`
 
-The constructor functions for Jaeger Tracer return the tracer itself and an `io.Closer` instance.
+The constructor function for Jaeger Tracer returns the tracer itself and an `io.Closer` instance.
 It is recommended to structure your `main()` so that it calls the `Close()` function on the closer
 before exiting, e.g.
 
 ```go
-tracer, closer, err := cfg.New(...)
+tracer, closer, err := cfg.NewTracer(...)
 defer closer.Close()
 ```
 
@@ -57,19 +95,29 @@ The tracer emits a number of different metrics, defined in
 tag-based metric names, e.g. instead of `statsd`-style string names
 like `counters.my-service.jaeger.spans.started.sampled`, the metrics
 are defined by a short name and a collection of key/value tags, for
-example: `name:traces, state:started, sampled:true`.
+example: `name:jaeger.traces, state:started, sampled:y`. See [metrics.go](./metrics.go)
+file for the full list and descriptions of emitted metrics.
 
-The monitoring backend is represented by the
-[StatsReporter](stats_reporter.go) interface. An implementation
-of that interface should be passed to the `New` method during
-tracer initialization:
+The monitoring backend is represented by the `metrics.Factory` interface from package
+[`"github.com/uber/jaeger-lib/metrics"`](https://github.com/jaegertracing/jaeger-lib/tree/master/metrics).  An implementation
+of that interface can be passed as an option to either the Configuration object or the Tracer
+constructor, for example:
 
 ```go
-    stats := // create StatsReporter implementation
-    tracer := config.Tracing.New("your-service-name", stats)
+import (
+    "github.com/uber/jaeger-client-go/config"
+    "github.com/uber/jaeger-lib/metrics/prometheus"
+)
+
+    metricsFactory := prometheus.New()
+    tracer, closer, err := config.Configuration{
+        ServiceName: "your-service-name",
+    }.NewTracer(
+        config.Metrics(metricsFactory),
+    )
 ```
 
-By default, a no-op `NullStatsReporter` is used.
+By default, a no-op `metrics.NullFactory` is used.
 
 ### Logging
 
@@ -80,18 +128,21 @@ by the [Logger](logger.go) interface. A logger instance implementing
 this interface can be set on the `Config` object before calling the
 `New` method.
 
+Besides the [zap](https://github.com/uber-go/zap) implementation
+bundled with this package there is also a [go-kit](https://github.com/go-kit/kit)
+one in the [jaeger-lib](https://github.com/jaegertracing/jaeger-lib) repository.
+
 ## Instrumentation for Tracing
 
 Since this tracer is fully compliant with OpenTracing API 1.0,
 all code instrumentation should only use the API itself, as described
-in the [opentracing-go]
-(https://github.com/opentracing/opentracing-go) documentation.
+in the [opentracing-go](https://github.com/opentracing/opentracing-go) documentation.
 
 ## Features
 
 ### Reporters
 
-A "reporter" is a component receives the finished spans and reports
+A "reporter" is a component that receives the finished spans and reports
 them to somewhere. Under normal circumstances, the Tracer
 should use the default `RemoteReporter`, which sends the spans out of
 process via configurable "transport". For testing purposes, one can
@@ -105,11 +156,9 @@ into one, e.g. to attach a logging reporter to the main remote reporter.
 ### Span Reporting Transports
 
 The remote reporter uses "transports" to actually send the spans out
-of process. Currently two supported transports are Thrift over UDP
-and Thrift over TChannel. More transports will be added in the future.
-
-The only data format currently used is Zipkin Thrift 1.x span format,
-which allows easy integration of the tracer with Zipkin backend.
+of process. Currently the supported transports include:
+  * [Jaeger Thrift](https://github.com/jaegertracing/jaeger-idl/blob/master/thrift/agent.thrift) over UDP or HTTP,
+  * [Zipkin Thrift](https://github.com/jaegertracing/jaeger-idl/blob/master/thrift/zipkincore.thrift) over HTTP.
 
 ### Sampling
 
@@ -134,18 +183,15 @@ are available:
 
 ### Baggage Injection
 
-The OpenTracing spec allows for [baggage](https://github.com/opentracing/specification/blob/master/specification.md#set-a-baggage-item),
-which are key value pairs that are added to the span context and propagated
-throughout the trace.
-An external process can inject baggage by setting the special
-HTTP Header `jaeger-baggage` on a request
+The OpenTracing spec allows for [baggage][baggage], which are key value pairs that are added
+to the span context and propagated throughout the trace. An external process can inject baggage
+by setting the special HTTP Header `jaeger-baggage` on a request:
 
 ```sh
 curl -H "jaeger-baggage: key1=value1, key2=value2" http://myhost.com
 ```
 
-Baggage can also be programatically set inside your service by doing
-the following
+Baggage can also be programatically set inside your service:
 
 ```go
 if span := opentracing.SpanFromContext(ctx); span != nil {
@@ -209,14 +255,16 @@ However it is not the default propagation format, see [here](zipkin/README.md#Ne
 
 ## License
 
-  [The MIT License](LICENSE).
+[Apache 2.0 License](LICENSE).
 
 
 [doc-img]: https://godoc.org/github.com/uber/jaeger-client-go?status.svg
 [doc]: https://godoc.org/github.com/uber/jaeger-client-go
-[ci-img]: https://travis-ci.org/uber/jaeger-client-go.svg?branch=master
-[ci]: https://travis-ci.org/uber/jaeger-client-go
-[cov-img]: https://coveralls.io/repos/uber/jaeger-client-go/badge.svg?branch=master&service=github
-[cov]: https://coveralls.io/github/uber/jaeger-client-go?branch=master
+[ci-img]: https://travis-ci.org/jaegertracing/jaeger-client-go.svg?branch=master
+[ci]: https://travis-ci.org/jaegertracing/jaeger-client-go
+[cov-img]: https://codecov.io/gh/jaegertracing/jaeger-client-go/branch/master/graph/badge.svg
+[cov]: https://codecov.io/gh/jaegertracing/jaeger-client-go
 [ot-img]: https://img.shields.io/badge/OpenTracing--1.0-enabled-blue.svg
 [ot-url]: http://opentracing.io
+[baggage]: https://github.com/opentracing/specification/blob/master/specification.md#set-a-baggage-item
+[timeunits]: https://golang.org/pkg/time/#ParseDuration

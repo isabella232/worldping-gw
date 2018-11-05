@@ -4,17 +4,21 @@ import (
 	"errors"
 	"flag"
 
-	"github.com/raintank/worldping-api/pkg/log"
+	"github.com/raintank/tsdb-gw/auth/gcom"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
-	ErrInvalidKey   = errors.New("invalid key")
-	ErrInvalidOrgId = errors.New("invalid orgId")
+	ErrInvalidCredentials = errors.New("invalid authentication credentials")
+	ErrInvalidOrgId       = errors.New("invalid orgId")
+	ErrInvalidInstanceID  = errors.New("invalid instanceID")
+	ErrInvalidRole        = errors.New("invalid authentication credentials, role unable to publish")
 
 	AdminKey  string
 	AdminUser = &User{
-		OrgId:   1,
+		ID:      1,
 		IsAdmin: true,
+		Role:    gcom.ROLE_ADMIN,
 	}
 )
 
@@ -23,22 +27,29 @@ func init() {
 }
 
 type User struct {
-	OrgId   int
+	ID      int
 	IsAdmin bool
+	Role    gcom.RoleType
 }
 
+// AuthPlugin is used to validate access
 type AuthPlugin interface {
-	Auth(userKey string) (*User, error)
+	// Auth returns whether a api_key is a valid and if the user has access to a certain instance
+	Auth(username, password string) (*User, error)
+	Stop()
 }
 
 func GetAuthPlugin(name string) AuthPlugin {
+	log.Debugf("initializing auth plugin %s", name)
 	switch name {
 	case "grafana":
 		return NewGrafanaComAuth()
+	case "grafana-instance":
+		return NewGrafanaComInstanceAuth()
 	case "file":
 		return NewFileAuth()
 	default:
-		log.Fatal(4, "invalid auth plugin specified, %s", name)
+		log.Fatalf("invalid auth plugin specified, %s", name)
 	}
 	return nil
 }
