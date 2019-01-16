@@ -69,6 +69,9 @@ func prepareIngest(ctx *models.Context, in []*schema.MetricData, toPublish []*sc
 		if m.Mtype == "" {
 			m.Mtype = "gauge"
 		}
+		// some customers still use old raintank-probes that include tags in the wrong format.
+		// we need to filter those out.
+		m.Tags = nil
 		if err := m.Validate(); err != nil {
 			log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
 			resp.AddInvalid(err, i)
@@ -86,7 +89,7 @@ func prepareIngest(ctx *models.Context, in []*schema.MetricData, toPublish []*sc
 	metricsValid.Add(len(toPublish))
 	for org, promDiscardsByOrg := range promDiscards {
 		for reason, cnt := range promDiscardsByOrg {
-			discardedSamples.WithLabelValues(strconv.Itoa(org), reason).Add(float64(cnt))
+			discardedSamples.WithLabelValues(reason, strconv.Itoa(org)).Add(float64(cnt))
 		}
 	}
 	return toPublish, resp

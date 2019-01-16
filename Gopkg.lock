@@ -397,7 +397,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a10a70a0d2036a202d62b7ef674ae30af03163d9e079cfb9a512e67d22041659"
+  digest = "1:d8aba6153679ecb47825133deb2181af9df65755a4d73d6f7b326d5e5060a201"
   name = "github.com/raintank/tsdb-gw"
   packages = [
     "api",
@@ -416,7 +416,7 @@
     "util",
   ]
   pruneopts = "UT"
-  revision = "d36c7be612bd12e24d8aefb24550e74a16c68a96"
+  revision = "292370c0f8081b07856e6b83edb308f2035dfd47"
 
 [[projects]]
   digest = "1:ed2aa78f23d3ea314c6abdd1763f8635d9b8d1556d87bb867559b45e471c1ed3"
