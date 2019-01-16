@@ -7,10 +7,11 @@ import (
 
 // Typed errors
 var (
-	ErrInvalidRoleType   = errors.New("Invalid role type")
-	ErrInvalidApiKey     = errors.New("Invalid API Key")
-	ErrInvalidOrgId      = errors.New("Invalid Org Id")
-	ErrInvalidInstanceID = errors.New("Invalid Instance ID")
+	ErrInvalidRoleType     = errors.New("Invalid role type")
+	ErrInvalidApiKey       = errors.New("Invalid API Key")
+	ErrInvalidOrgId        = errors.New("Invalid Org Id")
+	ErrInvalidInstanceID   = errors.New("Invalid Instance ID")
+	ErrInvalidInstanceType = errors.New("Invalid Instance Type")
 )
 
 type RoleType string
@@ -47,8 +48,9 @@ type SignedInUser struct {
 }
 
 type Instance struct {
-	ID          int64  `json:"id"`
-	OrgID       int    `json:"orgId"`
-	ClusterName string `json:"clusterName"`
-	ClusterID   int    `json:"clusterId"`
+	ID           int64  `json:"id"`
+	OrgID        int    `json:"orgId"`
+	ClusterName  string `json:"clusterName"`
+	ClusterID    int    `json:"clusterId"`
+	InstanceType string `json:"type"`
 }

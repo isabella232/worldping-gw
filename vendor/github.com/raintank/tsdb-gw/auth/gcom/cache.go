@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	cacheTTL      = time.Hour
-	tokenCache    *TokenCache
-	instanceCache *InstanceCache
+	defaultCacheTTL = time.Hour
+	tokenCache      *TokenCache
+	instanceCache   *InstanceCache
 )
 
 func InitTokenCache() {
@@ -19,6 +19,8 @@ func InitTokenCache() {
 		tokenCache = &TokenCache{
 			items: make(map[string]*TokenResp),
 			stop:  make(chan struct{}),
+
+			cacheTTL: defaultCacheTTL,
 		}
 		go tokenCache.backgroundValidation()
 	}
@@ -33,6 +35,8 @@ func InitInstanceCache() {
 		instanceCache = &InstanceCache{
 			items: make(map[string]*InstanceResp),
 			stop:  make(chan struct{}),
+
+			cacheTTL: defaultCacheTTL,
 		}
 		go instanceCache.backgroundValidation()
 	}
@@ -46,6 +50,8 @@ type TokenCache struct {
 	sync.RWMutex
 	items map[string]*TokenResp
 	stop  chan struct{}
+
+	cacheTTL time.Duration
 }
 
 type TokenResp struct {
@@ -67,7 +73,7 @@ func (c *TokenCache) Get(key string) (*SignedInUser, bool) {
 }
 
 func (c *TokenCache) Set(key string, u *SignedInUser) {
-	log.Debugf("Auth: Caching token validation response for %s", cacheTTL.String())
+	log.Debugf("Auth: Caching token validation response for %s", c.cacheTTL.String())
 	now := time.Now()
 	c.Lock()
 	c.items[key] = &TokenResp{
@@ -85,7 +91,7 @@ func (c *TokenCache) Clear() {
 }
 
 func (c *TokenCache) backgroundValidation() {
-	ticker := time.NewTicker(cacheTTL / 2)
+	ticker := time.NewTicker(c.cacheTTL / 2)
 	for {
 		select {
 		case <-c.stop:
@@ -97,7 +103,7 @@ func (c *TokenCache) backgroundValidation() {
 }
 
 func (c *TokenCache) validate(now time.Time) {
-	oldestAllowed := now.Add(-1 * cacheTTL)
+	oldestAllowed := now.Add(-1 * c.cacheTTL)
 	// We want to hold the ReadLock for as short a time as possible,
 	// so we lock, then get all of the keys in the cache in one go.
 	c.RLock()
@@ -148,6 +154,8 @@ type InstanceCache struct {
 	sync.RWMutex
 	items map[string]*InstanceResp
 	stop  chan struct{}
+
+	cacheTTL time.Duration
 }
 
 type InstanceResp struct {
@@ -188,7 +196,7 @@ func (c *InstanceCache) Clear() {
 }
 
 func (c *InstanceCache) backgroundValidation() {
-	ticker := time.NewTicker(cacheTTL / 2)
+	ticker := time.NewTicker(c.cacheTTL / 2)
 	for {
 		select {
 		case <-c.stop:
@@ -200,7 +208,7 @@ func (c *InstanceCache) backgroundValidation() {
 }
 
 func (c *InstanceCache) validate(now time.Time) {
-	oldestAllowed := now.Add(-1 * cacheTTL)
+	oldestAllowed := now.Add(-1 * c.cacheTTL)
 	// We want to hold the ReadLock for as short a time as possible,
 	// so we lock, then get all of the keys in the cache.
 	c.RLock()

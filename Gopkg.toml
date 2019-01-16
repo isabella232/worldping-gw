@@ -38,7 +38,7 @@
   name = "github.com/grafana/globalconf"
 
 [[constraint]]
-  revision = "master"
+  branch = "master"
   name = "github.com/raintank/tsdb-gw"
 
 [[constraint]]

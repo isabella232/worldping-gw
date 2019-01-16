@@ -13,6 +13,7 @@ import (
 
 	"github.com/grafana/globalconf"
 	"github.com/grafana/metrictank/stats"
+	eventsPublish "github.com/grafana/worldping-gw/events/publish"
 	eventsIngest "github.com/grafana/worldping-gw/ingest"
 	"github.com/grafana/worldping-gw/query/elasticsearch"
 	"github.com/grafana/worldping-gw/query/graphite"
@@ -109,6 +110,7 @@ func main() {
 	defer traceCloser.Close()
 
 	publisher := kafka.New(*broker, true)
+	eventsPublish.Init(*broker)
 	if publisher == nil {
 		publish.Init(nil)
 	} else {

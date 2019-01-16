@@ -5,19 +5,30 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"strconv"
 
 	"github.com/golang/snappy"
 	"github.com/grafana/metrictank/stats"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/raintank/schema"
+	"github.com/raintank/schema/msg"
 	"github.com/raintank/tsdb-gw/api/models"
 	"github.com/raintank/tsdb-gw/publish"
 	log "github.com/sirupsen/logrus"
-	"github.com/raintank/schema"
-	"github.com/raintank/schema/msg"
 )
 
 var (
-	metricsValid    = stats.NewCounterRate32("metrics.http.valid")
-	metricsRejected = stats.NewCounterRate32("metrics.http.rejected")
+	metricsValid    = stats.NewCounterRate32("metrics.http.valid")    // valid metrics received (not necessarily published)
+	metricsRejected = stats.NewCounterRate32("metrics.http.rejected") // invalid metrics received
+
+	discardedSamples = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "gateway",
+			Name:      "invalid_samples_total",
+			Help:      "The total number of samples that were discarded because they are invalid.",
+		},
+		[]string{"reason", "org"},
+	)
 )
 
 func Metrics(ctx *models.Context) {
@@ -34,128 +45,155 @@ func Metrics(ctx *models.Context) {
 	}
 }
 
-func metricsJson(ctx *models.Context) {
-	defer ctx.Req.Request.Body.Close()
-	if ctx.Req.Request.Body != nil {
-		body, err := ioutil.ReadAll(ctx.Req.Request.Body)
-		if err != nil {
-			log.Errorf("unable to read request body. %s", err)
-		}
-		metrics := make([]*schema.MetricData, 0)
-		err = json.Unmarshal(body, &metrics)
-		if err != nil {
-			ctx.JSON(400, fmt.Sprintf("unable to parse request body. %s", err))
-			return
-		}
+type discardsByReason map[string]int
+type discardsByOrg map[int]discardsByReason
 
-		if ctx.IsAdmin {
-			for _, m := range metrics {
-				if m.Mtype == "" {
-					m.Mtype = "gauge"
-				}
-				if err := m.Validate(); err != nil {
-					log.Debugf("unable to validate metric: %v %v %v", m.Name, m.OrgId, m.Tags)
-					metricsRejected.Add(len(metrics))
-					ctx.JSON(400, err.Error())
-					return
-				}
-			}
-		} else {
-			for _, m := range metrics {
-				m.OrgId = ctx.ID
-				if m.Mtype == "" {
-					m.Mtype = "gauge"
-				}
-				if err := m.Validate(); err != nil {
-					log.Debugf("unable to validate metric: %v %v %v", m.Name, m.OrgId, m.Tags)
-					metricsRejected.Add(len(metrics))
-					ctx.JSON(400, err.Error())
-					return
-				}
-				m.SetId()
-			}
+func (dbo discardsByOrg) Add(org int, reason string) {
+	dbr, ok := dbo[org]
+	if !ok {
+		dbr = make(discardsByReason)
+	}
+	dbr[reason]++
+	dbo[org] = dbr
+}
+
+func prepareIngest(ctx *models.Context, in []*schema.MetricData, toPublish []*schema.MetricData) ([]*schema.MetricData, MetricsResponse) {
+	resp := NewMetricsResponse()
+	promDiscards := make(discardsByOrg)
+
+	for i, m := range in {
+		if !ctx.IsAdmin {
+			m.OrgId = ctx.ID
 		}
-		metricsValid.Add(len(metrics))
-		err = publish.Publish(metrics)
-		if err != nil {
-			log.Errorf("failed to publish metrics. %s", err)
-			ctx.JSON(500, err)
-			return
+		if m.Mtype == "" {
+			m.Mtype = "gauge"
 		}
-		ctx.JSON(200, "ok")
+		if err := m.Validate(); err != nil {
+			log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
+			resp.AddInvalid(err, i)
+			promDiscards.Add(m.OrgId, err.Error())
+			continue
+		}
+		if !ctx.IsAdmin {
+			m.SetId()
+		}
+		toPublish = append(toPublish, m)
+	}
+
+	// track invalid/discards in graphite and prometheus
+	metricsRejected.Add(resp.Invalid)
+	metricsValid.Add(len(toPublish))
+	for org, promDiscardsByOrg := range promDiscards {
+		for reason, cnt := range promDiscardsByOrg {
+			discardedSamples.WithLabelValues(strconv.Itoa(org), reason).Add(float64(cnt))
+		}
+	}
+	return toPublish, resp
+}
+
+func metricsJson(ctx *models.Context) {
+	if ctx.Req.Request.Body == nil {
+		ctx.JSON(400, "no data included in request.")
 		return
 	}
-	ctx.JSON(400, "no data included in request.")
+	defer ctx.Req.Request.Body.Close()
+	body, err := ioutil.ReadAll(ctx.Req.Request.Body)
+	if err != nil {
+		select {
+		case <-ctx.Req.Context().Done():
+			ctx.Error(499, "request canceled")
+		default:
+			log.Errorf("unable to read request body. %s", err)
+			ctx.JSON(500, err)
+		}
+		return
+	}
+	metrics := make([]*schema.MetricData, 0)
+	err = json.Unmarshal(body, &metrics)
+	if err != nil {
+		ctx.JSON(400, fmt.Sprintf("unable to parse request body. %s", err))
+		return
+	}
+
+	toPublish := make([]*schema.MetricData, 0, len(metrics))
+	toPublish, resp := prepareIngest(ctx, metrics, toPublish)
+
+	select {
+	case <-ctx.Req.Context().Done():
+		ctx.Error(499, "request canceled")
+		return
+	default:
+	}
+
+	err = publish.Publish(toPublish)
+	if err != nil {
+		log.Errorf("failed to publish metrics. %s", err)
+		ctx.JSON(500, err)
+		return
+	}
+
+	// track published in the response (it already has discards)
+	resp.Published = len(toPublish)
+	ctx.JSON(200, resp)
 }
 
 func metricsBinary(ctx *models.Context, compressed bool) {
-	var body io.ReadCloser
-	if compressed {
-		body = ioutil.NopCloser(snappy.NewReader(ctx.Req.Request.Body))
-	} else {
-		body = ctx.Req.Request.Body
-	}
-	defer body.Close()
-
-	if ctx.Req.Request.Body != nil {
-		body, err := ioutil.ReadAll(body)
-		if err != nil {
-			log.Errorf("unable to read request body. %s", err)
-			ctx.JSON(500, err)
-			return
-		}
-		metricData := new(msg.MetricData)
-		err = metricData.InitFromMsg(body)
-		if err != nil {
-			log.Errorf("payload not metricData. %s", err)
-			ctx.JSON(500, err)
-			return
-		}
-
-		err = metricData.DecodeMetricData()
-		if err != nil {
-			log.Errorf("failed to unmarshal metricData. %s", err)
-			ctx.JSON(500, err)
-			return
-		}
-
-		if ctx.IsAdmin {
-			for _, m := range metricData.Metrics {
-				if m.Mtype == "" {
-					m.Mtype = "gauge"
-				}
-
-				if err := m.Validate(); err != nil {
-					metricsRejected.Add(len(metricData.Metrics))
-					log.Debugf("unable to validate metric: %v %v %v", m.Name, m.OrgId, m.Tags)
-					ctx.JSON(400, err.Error())
-					return
-				}
-			}
-		} else {
-			for _, m := range metricData.Metrics {
-				m.OrgId = ctx.ID
-				if m.Mtype == "" {
-					m.Mtype = "gauge"
-				}
-				if err := m.Validate(); err != nil {
-					log.Debugf("unable to validate metric: %v %v %v", m.Name, m.OrgId, m.Tags)
-					metricsRejected.Add(len(metricData.Metrics))
-					ctx.JSON(400, err.Error())
-					return
-				}
-				m.SetId()
-			}
-		}
-		metricsValid.Add(len(metricData.Metrics))
-		err = publish.Publish(metricData.Metrics)
-		if err != nil {
-			log.Errorf("failed to publish metrics. %s", err)
-			ctx.JSON(500, err)
-			return
-		}
-		ctx.JSON(200, "ok")
+	if ctx.Req.Request.Body == nil {
+		ctx.JSON(400, "no data included in request.")
 		return
 	}
-	ctx.JSON(400, "no data included in request.")
+	var bodyReadCloser io.ReadCloser
+	if compressed {
+		bodyReadCloser = ioutil.NopCloser(snappy.NewReader(ctx.Req.Request.Body))
+	} else {
+		bodyReadCloser = ctx.Req.Request.Body
+	}
+	defer bodyReadCloser.Close()
+
+	body, err := ioutil.ReadAll(bodyReadCloser)
+	if err != nil {
+		select {
+		case <-ctx.Req.Context().Done():
+			ctx.Error(499, "request canceled")
+		default:
+			log.Errorf("unable to read request body. %s", err)
+			ctx.JSON(500, err)
+		}
+		return
+	}
+	metricData := new(msg.MetricData)
+	err = metricData.InitFromMsg(body)
+	if err != nil {
+		log.Errorf("payload not metricData. %s", err)
+		ctx.JSON(400, err)
+		return
+	}
+
+	err = metricData.DecodeMetricData()
+	if err != nil {
+		log.Errorf("failed to unmarshal metricData. %s", err)
+		ctx.JSON(400, err)
+		return
+	}
+
+	toPublish := make([]*schema.MetricData, 0, len(metricData.Metrics))
+	toPublish, resp := prepareIngest(ctx, metricData.Metrics, toPublish)
+
+	select {
+	case <-ctx.Req.Context().Done():
+		ctx.Error(499, "request canceled")
+		return
+	default:
+	}
+
+	err = publish.Publish(toPublish)
+	if err != nil {
+		log.Errorf("failed to publish metrics. %s", err)
+		ctx.JSON(500, err)
+		return
+	}
+
+	// track published in the response (it already has discards)
+	resp.Published = len(toPublish)
+	ctx.JSON(200, resp)
 }
