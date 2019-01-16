@@ -10,6 +10,7 @@ import (
 	"github.com/golang/snappy"
 	"github.com/grafana/metrictank/stats"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/raintank/schema"
 	"github.com/raintank/schema/msg"
 	"github.com/raintank/tsdb-gw/api/models"
@@ -21,7 +22,7 @@ var (
 	metricsValid    = stats.NewCounterRate32("metrics.http.valid")    // valid metrics received (not necessarily published)
 	metricsRejected = stats.NewCounterRate32("metrics.http.rejected") // invalid metrics received
 
-	discardedSamples = prometheus.NewCounterVec(
+	discardedSamples = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "gateway",
 			Name:      "invalid_samples_total",
