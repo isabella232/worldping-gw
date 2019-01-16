@@ -183,7 +183,6 @@ func initRoutes(a *api.Api, enforceRoles bool) {
 
 	a.Router.Post("/metrics", a.GenerateHandlers("write", enforceRoles, false, ingest.Metrics)...)
 	a.Router.Post("/metrics/delete", a.GenerateHandlers("write", enforceRoles, false, metrictank.MetrictankProxy("/metrics/delete"))...)
-	a.Router.Post("/events")
 
 	a.Router.Post("/events", a.GenerateHandlers("write", enforceRoles, false, eventsIngest.Events)...)
 	a.Router.Any("/elasticsearch/*", a.GenerateHandlers("read", enforceRoles, false, elasticsearch.ElasticsearchProxy)...)
