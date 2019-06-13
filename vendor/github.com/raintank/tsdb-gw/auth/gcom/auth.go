@@ -12,17 +12,26 @@ import (
 	"strings"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/singleflight"
 )
 
 var singlef = &singleflight.Group{}
 
+var validationFailed = promauto.NewCounterVec(prometheus.CounterOpts{
+	Name: "gateway_auth_validation_failed",
+	Help: "The number of instance/cluster validation failures.",
+}, []string{"validation"})
+
 func init() {
 	flag.StringVar(&authEndpoint, "auth-endpoint", authEndpoint, "Endpoint to authenticate users on")
 	flag.DurationVar(&defaultCacheTTL, "auth-cache-ttl", defaultCacheTTL, "how long auth responses should be cached")
 	flag.Var(&validOrgIds, "auth-valid-org-id", "restrict authentication to the listed orgId (comma separated list)")
 	flag.StringVar(&validInstanceType, "auth-valid-instance-type", "", "if set, instance validation while fail if the type attribute of an instance does not match. (graphite|graphite-shared|prometheus|logs)")
+	flag.IntVar(&validClusterID, "auth-valid-cluster-id", 0, "if set, instance validation while fail if the cluster id attribute of an instance does not match.")
+	flag.BoolVar(&validationDryRun, "auth-validation-dry-run", true, "if true, invalid instance type and cluster would just cause logging of the bad requests but not an actual failure of the request.")
 }
 
 type int64SliceFlag []int64
@@ -51,6 +60,8 @@ var (
 	authEndpoint      = "https://grafana.com"
 	validOrgIds       = int64SliceFlag{}
 	validInstanceType string
+	validClusterID    int
+	validationDryRun  bool
 
 	// global HTTP client.  By sharing the client we can take
 	// advantage of keepalives and re-use connections instead
@@ -221,8 +232,21 @@ func validateInstance(instanceID, token string) error {
 	}
 
 	if validInstanceType != "" && validInstanceType != instance.InstanceType {
-		log.Infof("Auth: instanceType returned from grafana.com doesnt match required instanceType. %s != %s", instance.InstanceType, validInstanceType)
-		return ErrInvalidInstanceType
+		validationFailed.WithLabelValues("instance").Inc()
+		log.Infof("Auth: user=%q instanceType returned from grafana.com doesnt match required instanceType. %s != %s", instanceID, instance.InstanceType, validInstanceType)
+
+		if !validationDryRun {
+			return ErrInvalidInstanceType
+		}
+	}
+
+	if validClusterID != 0 && validClusterID != instance.ClusterID {
+		validationFailed.WithLabelValues("cluster").Inc()
+		log.Infof("Auth: user=%q clusterID returned from grafana.com doesnt match required clusterID. %d != %d", instanceID, instance.ClusterID, validClusterID)
+
+		if !validationDryRun {
+			return ErrInvalidCluster
+		}
 	}
 
 	return nil

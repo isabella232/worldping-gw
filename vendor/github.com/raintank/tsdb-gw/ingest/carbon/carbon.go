@@ -24,6 +24,7 @@ var (
 	metricsFailed            = stats.NewCounterRate32("metrics.carbon.failed")
 	metricsDroppedBufferFull = stats.NewCounterRate32("metrics.carbon.dropped_buffer_full")
 	metricsDroppedAuthFail   = stats.NewCounterRate32("metrics.carbon.dropped_auth_fail")
+	metricsTimestamp         = stats.NewRange32("metrics.timestamp.carbon") // min/max timestamps seen in each interval
 
 	carbonConnections = stats.NewGauge32("carbon.connections")
 
@@ -164,6 +165,7 @@ func (c *Carbon) flush() {
 				metricsRejected.Inc()
 				continue
 			}
+			metricsTimestamp.ValueUint32(uint32(md.Time))
 			buf = append(buf, md)
 		}
 	}

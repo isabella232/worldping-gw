@@ -19,8 +19,9 @@ import (
 )
 
 var (
-	metricsValid    = stats.NewCounterRate32("metrics.http.valid")    // valid metrics received (not necessarily published)
-	metricsRejected = stats.NewCounterRate32("metrics.http.rejected") // invalid metrics received
+	metricsValid     = stats.NewCounterRate32("metrics.http.valid")    // valid metrics received (not necessarily published)
+	metricsRejected  = stats.NewCounterRate32("metrics.http.rejected") // invalid metrics received
+	metricsTimestamp = stats.NewRange32("metrics.timestamp.http")      // min/max timestamps seen in each interval
 
 	discardedSamples = promauto.NewCounterVec(
 		prometheus.CounterOpts{
@@ -69,9 +70,6 @@ func prepareIngest(ctx *models.Context, in []*schema.MetricData, toPublish []*sc
 		if m.Mtype == "" {
 			m.Mtype = "gauge"
 		}
-		// some customers still use old raintank-probes that include tags in the wrong format.
-		// we need to filter those out.
-		m.Tags = nil
 		if err := m.Validate(); err != nil {
 			log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
 			resp.AddInvalid(err, i)
@@ -81,6 +79,7 @@ func prepareIngest(ctx *models.Context, in []*schema.MetricData, toPublish []*sc
 		if !ctx.IsAdmin {
 			m.SetId()
 		}
+		metricsTimestamp.ValueUint32(uint32(m.Time))
 		toPublish = append(toPublish, m)
 	}
 

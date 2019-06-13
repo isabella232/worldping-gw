@@ -1,10 +1,12 @@
 package api
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"path"
 	"strconv"
@@ -19,7 +21,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/raintank/tsdb-gw/api/models"
 	"github.com/raintank/tsdb-gw/auth"
-	"github.com/raintank/tsdb-gw/usage"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/macaron.v1"
 )
@@ -50,6 +51,14 @@ func (rw *TracingResponseWriter) Write(b []byte) (int, error) {
 		copy(rw.errBody, b)
 	}
 	return rw.ResponseWriter.Write(b)
+}
+
+func (rw *TracingResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hijacker, ok := rw.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, fmt.Errorf("the ResponseWriter doesn't support the Hijacker interface")
+	}
+	return hijacker.Hijack()
 }
 
 func GetContextHandler() macaron.Handler {
@@ -235,7 +244,6 @@ func (r *requestStats) PathStatusCount(ctx *models.Context, path string, status 
 	}
 	r.Unlock()
 	c.Inc()
-	usage.LogRequest(ctx.ID, metricKey)
 }
 
 func (r *requestStats) PathLatency(ctx *models.Context, path string, dur time.Duration) {

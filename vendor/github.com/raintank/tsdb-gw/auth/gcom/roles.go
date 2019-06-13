@@ -12,6 +12,7 @@ var (
 	ErrInvalidOrgId        = errors.New("Invalid Org Id")
 	ErrInvalidInstanceID   = errors.New("Invalid Instance ID")
 	ErrInvalidInstanceType = errors.New("Invalid Instance Type")
+	ErrInvalidCluster      = errors.New("Invalid Cluster")
 )
 
 type RoleType string
