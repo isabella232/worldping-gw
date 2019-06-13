@@ -13,7 +13,6 @@ import (
 	"github.com/raintank/schema"
 	"github.com/raintank/schema/msg"
 	"github.com/raintank/tsdb-gw/publish/kafka/keycache"
-	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
 )
@@ -261,9 +260,6 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 	publishedMP.Add(pubMP)
 	publishedMPNO.Add(pubMPNO)
 	log.Debugf("published %d metrics", pubMD+pubMP)
-	for _, metric := range metrics {
-		usage.LogDataPoint(metric.Id)
-	}
 	return nil
 }
 

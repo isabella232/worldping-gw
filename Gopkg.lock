@@ -45,14 +45,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4c4c33075b704791d6a7f09dfb55c66769e8a1dc6adf87026292d274fe8ad113"
-  name = "github.com/codahale/hdrhistogram"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "3a0bb77429bd3a61596f5e8a3172445844342120"
-
-[[projects]]
-  branch = "master"
   digest = "1:295828d2783075f3d1442ae2fccccfad2016ca711fc7afea0cd46f8e5f695fb6"
   name = "github.com/codeskyblue/go-uuid"
   packages = ["."]
@@ -190,7 +182,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4980af99af2473249b8645cfa7141db7a43d1a8c9df34a772cf1895b3fc59328"
+  digest = "1:98f85cb39a8a5f4dd7f3a79ccd2565108ca6ab487d08a947f07e0e9f5c0acc86"
   name = "github.com/grafana/metrictank"
   packages = [
     "cluster/partitioner",
@@ -198,11 +190,12 @@
     "mdata/chunk",
     "mdata/chunk/tsz",
     "mdata/chunk/tsz/testdata",
+    "mdata/errors",
     "stats",
     "util",
   ]
   pruneopts = "UT"
-  revision = "bd4c09dc7758f2e64cb4dcb67546b643eaaa6236"
+  revision = "b18aa05f5a747eb8d38f8ed545d0540f9a3ee1bb"
 
 [[projects]]
   branch = "master"
@@ -276,7 +269,7 @@
   revision = "717ed3a27bf9f8d2469e7ea5b36037a4793eee44"
 
 [[projects]]
-  digest = "1:450b7623b185031f3a456801155c8320209f75d0d4c4e633c6b1e59d44d6e392"
+  digest = "1:11e62d6050198055e6cd87ed57e5d8c669e84f839c16e16f192374d913d1a70d"
   name = "github.com/opentracing/opentracing-go"
   packages = [
     ".",
@@ -284,8 +277,8 @@
     "log",
   ]
   pruneopts = "UT"
-  revision = "1949ddbfd147afd4d964a9f00b24eb291e0e7c38"
-  version = "v1.0.2"
+  revision = "659c90643e714681897ec2521c60567dd21da733"
+  version = "v1.1.0"
 
 [[projects]]
   digest = "1:95741de3af260a92cc5c7f3f3061e85273f5a81b5db20d4bd68da74bd521675e"
@@ -385,19 +378,18 @@
   revision = "955e3a77c6a8294c013cb1bf45ed3965e5f19299"
 
 [[projects]]
-  digest = "1:d456de3a61bdb023a90d62584b5697f8a905cd82f002cbd683caa5aae1164d26"
+  digest = "1:cc84d76af9aec24dfda5b693fbc7fc2cb3d2cb2af2f22f5e51b1c98987f37441"
   name = "github.com/raintank/schema"
   packages = [
     ".",
     "msg",
   ]
   pruneopts = "UT"
-  revision = "0140483a390ec5e52dd79c5d37c699d9cfe6c9f8"
-  version = "v2.1"
+  revision = "49c3f30550ed40c22931bc7f46e5c3a7676236b4"
 
 [[projects]]
   branch = "master"
-  digest = "1:d8aba6153679ecb47825133deb2181af9df65755a4d73d6f7b326d5e5060a201"
+  digest = "1:7a145ee9a7a11ff0495f1f798d44e90f1437048332e1ea7e3afa22986cbc3605"
   name = "github.com/raintank/tsdb-gw"
   packages = [
     "api",
@@ -412,11 +404,10 @@
     "publish/kafka/keycache",
     "query/graphite",
     "query/metrictank",
-    "usage",
     "util",
   ]
   pruneopts = "UT"
-  revision = "292370c0f8081b07856e6b83edb308f2035dfd47"
+  revision = "8f6a9b8c15a60aab16a54ddf91cbeff6a4bf2dd7"
 
 [[projects]]
   digest = "1:ed2aa78f23d3ea314c6abdd1763f8635d9b8d1556d87bb867559b45e471c1ed3"
@@ -463,15 +454,15 @@
   revision = "70e15c650864f4fc47f5d3c82ea117285480895d"
 
 [[projects]]
-  digest = "1:eaa6698f44de8f2977e93c9b946e60a8af75f565058658aad2df8032b55c84e5"
+  digest = "1:c97e8a5e5c435c3287f581cdb4441ba34577ec6ead8422bfedafa6269af7abf6"
   name = "github.com/tinylib/msgp"
   packages = ["msgp"]
   pruneopts = "UT"
-  revision = "b2b6a672cf1e5b90748f79b8b81fc8c5cf0571a1"
-  version = "1.0.2"
+  revision = "af6442a0fcf6e2a1b824f70dd0c734f01e817751"
+  version = "v1.1.0"
 
 [[projects]]
-  digest = "1:ac6f26e917fd2fb3194a7ebe2baf6fb32de2f2fbfed130c18aac0e758a6e1d22"
+  digest = "1:3b0ac1ac6f703e6d43f4e29c97da2c9e34465c66e2e19f9828e9841d1c9279a4"
   name = "github.com/uber/jaeger-client-go"
   packages = [
     ".",
@@ -493,17 +484,17 @@
     "utils",
   ]
   pruneopts = "UT"
-  revision = "1a782e2da844727691fef1757c72eb190c2909f0"
+  revision = "2f47546e3facd43297739439600bcf43f44cce5d"
   source = "https://github.com/jaegertracing/jaeger-client-go.git"
-  version = "v2.15.0"
+  version = "v2.16.0"
 
 [[projects]]
-  digest = "1:0f09db8429e19d57c8346ad76fbbc679341fa86073d3b8fb5ac919f0357d8f4c"
+  digest = "1:c9d69a04f7fa171f50360bbcc32196b4de8ab8837ef772f6302d0140a1e3e7f6"
   name = "github.com/uber/jaeger-lib"
   packages = ["metrics"]
   pruneopts = "UT"
-  revision = "ed3a127ec5fef7ae9ea95b01b542c47fbd999ce5"
-  version = "v1.5.0"
+  revision = "0e30338a695636fe5bcf7301e8030ce8dd2a8530"
+  version = "v2.0.0"
 
 [[projects]]
   digest = "1:ddcaac7ce43856444af0804f779274fbb9399110c09ac73d72e4b1f1852e370c"
@@ -650,7 +641,6 @@
     "github.com/raintank/tsdb-gw/publish/kafka",
     "github.com/raintank/tsdb-gw/query/graphite",
     "github.com/raintank/tsdb-gw/query/metrictank",
-    "github.com/raintank/tsdb-gw/usage",
     "github.com/raintank/tsdb-gw/util",
     "github.com/sirupsen/logrus",
     "github.com/smartystreets/goconvey/convey",

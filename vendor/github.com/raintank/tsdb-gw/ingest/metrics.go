@@ -19,8 +19,9 @@ import (
 )
 
 var (
-	metricsValid    = stats.NewCounterRate32("metrics.http.valid")    // valid metrics received (not necessarily published)
-	metricsRejected = stats.NewCounterRate32("metrics.http.rejected") // invalid metrics received
+	metricsValid     = stats.NewCounterRate32("metrics.http.valid")    // valid metrics received (not necessarily published)
+	metricsRejected  = stats.NewCounterRate32("metrics.http.rejected") // invalid metrics received
+	metricsTimestamp = stats.NewRange32("metrics.timestamp.http")      // min/max timestamps seen in each interval
 
 	discardedSamples = promauto.NewCounterVec(
 		prometheus.CounterOpts{
@@ -81,6 +82,7 @@ func prepareIngest(ctx *models.Context, in []*schema.MetricData, toPublish []*sc
 		if !ctx.IsAdmin {
 			m.SetId()
 		}
+		metricsTimestamp.ValueUint32(uint32(m.Time))
 		toPublish = append(toPublish, m)
 	}
 

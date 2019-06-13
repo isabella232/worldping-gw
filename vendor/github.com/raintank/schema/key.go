@@ -6,13 +6,24 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/tinylib/msgp/msgp"
 )
 
 //go:generate msgp
 //msgp:ignore AMKey
 // don't ignore Key, MKey because it's used for MetricDefinition
 
-var ErrStringTooShort = errors.New("string to short")
+// A random number that does not conflict with any of the msgp internal
+// types, and which is also not the first one after the msgp internal types
+// to avoid accidental conflicts with other custom types
+const msgpExtensionId = 97
+
+func init() {
+	msgp.RegisterExtension(msgpExtensionId, func() msgp.Extension { return new(AMKey) })
+}
+
+var ErrStringTooShort = errors.New("string too short")
 var ErrInvalidFormat = errors.New("invalid format")
 
 // Key identifies a metric
@@ -57,7 +68,6 @@ func MKeyFromString(s string) (MKey, error) {
 
 func (m MKey) String() string {
 	return fmt.Sprintf("%d.%x", m.Org, m.Key)
-
 }
 
 // AMKey is a multi-tenant key with archive extension
@@ -65,6 +75,37 @@ func (m MKey) String() string {
 type AMKey struct {
 	MKey    MKey
 	Archive Archive
+}
+
+// ExtensionType is part of the msgp.Extension interface
+func (a *AMKey) ExtensionType() int8 {
+	return msgpExtensionId
+}
+
+// Len is part of the msgp.Extension interface
+// It returns the length of the encoded byte slice representing this AMKey
+// Length is variable because the AMKey may include the span & method,
+// also the org id can have a varying number of digits
+func (a *AMKey) Len() int {
+	return len(a.String())
+}
+
+// MarshalBinaryTo is part of the msgp.Extension interface
+// It takes a buffer which must have the length returned by the Len() function
+// and writes the encoded version of this AMKey into it
+func (a *AMKey) MarshalBinaryTo(buf []byte) error {
+	copy(buf, a.String())
+
+	return nil
+}
+
+// UnmarshalBinary is part of the msgp.Extension interface
+// It takes a buffer containing an encoded AMKey and decodes it into this
+// AMKey instance
+func (a *AMKey) UnmarshalBinary(buf []byte) error {
+	var err error
+	*a, err = AMKeyFromString(string(buf))
+	return err
 }
 
 func (a AMKey) String() string {
@@ -85,31 +126,20 @@ func GetAMKey(m MKey, method Method, span uint32) AMKey {
 func AMKeyFromString(s string) (AMKey, error) {
 	underscores := strings.Count(s, "_")
 	amk := AMKey{}
+	var err error
 	switch underscores {
 	case 0:
-		mk, err := MKeyFromString(s)
-		amk.MKey = mk
+		amk.MKey, err = MKeyFromString(s)
 		return amk, err
 	case 2:
-		splits := strings.Split(s, "_")
-		mk, err := MKeyFromString(splits[0])
+		pos := strings.Index(s, "_")
+		amk.MKey, err = MKeyFromString(s[:pos])
 		if err != nil {
 			return amk, err
 		}
-		amk.MKey = mk
-		method, err := MethodFromString(splits[1])
-		if err != nil {
-			return amk, err
-		}
-		span, err := strconv.ParseInt(splits[2], 10, 32)
-		if err != nil {
-			return amk, err
-		}
-		if !IsSpanValid(uint32(span)) {
-			return amk, fmt.Errorf("invalid span %d", span)
-		}
-		amk.Archive = NewArchive(method, uint32(span))
-		return amk, nil
+		amk.Archive, err = ArchiveFromString(s[pos+1:])
+		return amk, err
+
 	}
 	return amk, ErrInvalidFormat
 }
