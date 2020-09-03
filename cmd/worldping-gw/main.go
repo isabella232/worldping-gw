@@ -97,7 +97,7 @@ func main() {
 	}
 	defer traceCloser.Close()
 
-	publisher := kafka.New(*broker, true)
+	publisher := kafka.New([]string{*broker}, true)
 	eventsPublish.Init(*broker)
 	if publisher == nil {
 		publish.Init(nil)
@@ -167,13 +167,13 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 
 func initRoutes(a *api.Api, enforceRoles bool) {
 	a.Router.Use(api.RequestStats())
-	a.Router.Get("/metrics/index.json", a.GenerateHandlers("read", enforceRoles, false, metrictank.MetrictankProxy("/metrics/index.json"))...)
-	a.Router.Get("/graphite/metrics/index.json", a.GenerateHandlers("read", enforceRoles, false, metrictank.MetrictankProxy("/metrics/index.json"))...)
-	a.Router.Any("/graphite/*", a.GenerateHandlers("read", enforceRoles, false, graphite.GraphiteProxy)...)
+	a.Router.Get("/metrics/index.json", a.GenerateHandlers("read", enforceRoles, false, false, metrictank.MetrictankProxy("/metrics/index.json"))...)
+	a.Router.Get("/graphite/metrics/index.json", a.GenerateHandlers("read", enforceRoles, false, false, metrictank.MetrictankProxy("/metrics/index.json"))...)
+	a.Router.Any("/graphite/*", a.GenerateHandlers("read", enforceRoles, false, false, graphite.GraphiteProxy)...)
 
-	a.Router.Post("/metrics", a.GenerateHandlers("write", enforceRoles, false, ingest.Metrics)...)
-	a.Router.Post("/metrics/delete", a.GenerateHandlers("write", enforceRoles, false, metrictank.MetrictankProxy("/metrics/delete"))...)
+	a.Router.Post("/metrics", a.GenerateHandlers("write", enforceRoles, false, false, ingest.Metrics)...)
+	a.Router.Post("/metrics/delete", a.GenerateHandlers("write", enforceRoles, false, false, metrictank.MetrictankProxy("/metrics/delete"))...)
 
-	a.Router.Post("/events", a.GenerateHandlers("write", enforceRoles, false, eventsIngest.Events)...)
-	a.Router.Any("/elasticsearch/*", a.GenerateHandlers("read", enforceRoles, false, elasticsearch.ElasticsearchProxy)...)
+	a.Router.Post("/events", a.GenerateHandlers("write", enforceRoles, false, false, eventsIngest.Events)...)
+	a.Router.Any("/elasticsearch/*", a.GenerateHandlers("read", enforceRoles, false, false, elasticsearch.ElasticsearchProxy)...)
 }

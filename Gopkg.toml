@@ -41,6 +41,11 @@
   branch = "master"
   name = "github.com/raintank/tsdb-gw"
 
+# github.com/raintank/tsdb-gw currently builds with that revision of metrictank
+[[override]]
+  name = "github.com/grafana/metrictank"
+  revision = "36ab5667d40d7d0eaa6677f72940640582be252a"
+
 [[constraint]]
   name = "github.com/sirupsen/logrus"
   # for carbon-relay-ng. it needs support for trace level

@@ -44,6 +44,14 @@
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
+  digest = "1:61406f6571eeb97717bdfaac37fa0bc5260621c4cbf3ce7635e9828dcbb5258a"
+  name = "github.com/cespare/xxhash"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d7df74196a9e781ede915320c11c378c1b2f3a1f"
+  version = "v2.1.1"
+
+[[projects]]
   branch = "master"
   digest = "1:295828d2783075f3d1442ae2fccccfad2016ca711fc7afea0cd46f8e5f695fb6"
   name = "github.com/codeskyblue/go-uuid"
@@ -58,6 +66,14 @@
   pruneopts = "UT"
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:01c6a8b9b26a1e4b824310503022ad47474d197a2b359f4ae8380a53ade55ed9"
+  name = "github.com/dgryski/go-jump"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e1f439676b570800a863c37b78d1f868f51a85fc"
 
 [[projects]]
   branch = "master"
@@ -181,8 +197,7 @@
   revision = "1dcfee16dd532cf6206e704d3ae6ca31ff4c6df7"
 
 [[projects]]
-  branch = "master"
-  digest = "1:98f85cb39a8a5f4dd7f3a79ccd2565108ca6ab487d08a947f07e0e9f5c0acc86"
+  digest = "1:1782965a12684ac4cdae2e1273365966328556c4f83398e055ea8e76a0cf7881"
   name = "github.com/grafana/metrictank"
   packages = [
     "cluster/partitioner",
@@ -191,11 +206,13 @@
     "mdata/chunk/tsz",
     "mdata/chunk/tsz/testdata",
     "mdata/errors",
+    "schema",
+    "schema/msg",
     "stats",
     "util",
   ]
   pruneopts = "UT"
-  revision = "b18aa05f5a747eb8d38f8ed545d0540f9a3ee1bb"
+  revision = "36ab5667d40d7d0eaa6677f72940640582be252a"
 
 [[projects]]
   branch = "master"
@@ -378,18 +395,8 @@
   revision = "955e3a77c6a8294c013cb1bf45ed3965e5f19299"
 
 [[projects]]
-  digest = "1:cc84d76af9aec24dfda5b693fbc7fc2cb3d2cb2af2f22f5e51b1c98987f37441"
-  name = "github.com/raintank/schema"
-  packages = [
-    ".",
-    "msg",
-  ]
-  pruneopts = "UT"
-  revision = "49c3f30550ed40c22931bc7f46e5c3a7676236b4"
-
-[[projects]]
   branch = "master"
-  digest = "1:7a145ee9a7a11ff0495f1f798d44e90f1437048332e1ea7e3afa22986cbc3605"
+  digest = "1:4b58406eb482b296eb993cdd1a98477838146458e02e83ef9452616351e0192b"
   name = "github.com/raintank/tsdb-gw"
   packages = [
     "api",
@@ -407,7 +414,7 @@
     "util",
   ]
   pruneopts = "UT"
-  revision = "8f6a9b8c15a60aab16a54ddf91cbeff6a4bf2dd7"
+  revision = "b45ed7ead5b4d48deb434cfd63dacb24f43c705e"
 
 [[projects]]
   digest = "1:ed2aa78f23d3ea314c6abdd1763f8635d9b8d1556d87bb867559b45e471c1ed3"
@@ -560,6 +567,14 @@
   pruneopts = "UT"
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:9a12483c63e8328a477280cd6855689af0f584eb580b66c0d113a1f5fe7791b0"
+  name = "golang.org/x/time"
+  packages = ["rate"]
+  pruneopts = "UT"
+  revision = "3af7569d3a1e776fc2a3c1cec133b43105ea9c2e"
 
 [[projects]]
   branch = "master"

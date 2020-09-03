@@ -5,12 +5,12 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
+	schema "github.com/grafana/metrictank/schema"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/raintank/tsdb-gw/api/models"
 	"github.com/raintank/tsdb-gw/publish"
 	log "github.com/sirupsen/logrus"
-	schema "github.com/raintank/schema"
 )
 
 func PrometheusMTWrite(ctx *models.Context) {

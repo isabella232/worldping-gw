@@ -67,9 +67,9 @@ func (a *Api) Start() *Api {
 		defer close(a.done)
 		var err error
 		if *ssl {
-			cert, err := tls.LoadX509KeyPair(*certFile, *keyFile)
-			if err != nil {
-				log.Fatalf("Fail to start server: %v", err)
+			cert, errKeyPair := tls.LoadX509KeyPair(*certFile, *keyFile)
+			if errKeyPair != nil {
+				log.Fatalf("Fail to start server: %v", errKeyPair)
 			}
 			srv.TLSConfig = &tls.Config{
 				Certificates: []tls.Certificate{cert},

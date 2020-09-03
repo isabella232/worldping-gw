@@ -3,14 +3,15 @@ package carbon
 import (
 	"bytes"
 	"flag"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/grafana/metrictank/conf"
+	"github.com/grafana/metrictank/schema"
 	"github.com/grafana/metrictank/stats"
 	"github.com/graphite-ng/carbon-relay-ng/input"
 	m20 "github.com/metrics20/go-metrics20/carbon20"
-	"github.com/raintank/schema"
 	"github.com/raintank/tsdb-gw/auth"
 	"github.com/raintank/tsdb-gw/publish"
 	"github.com/raintank/tsdb-gw/util"
@@ -24,7 +25,9 @@ var (
 	metricsFailed            = stats.NewCounterRate32("metrics.carbon.failed")
 	metricsDroppedBufferFull = stats.NewCounterRate32("metrics.carbon.dropped_buffer_full")
 	metricsDroppedAuthFail   = stats.NewCounterRate32("metrics.carbon.dropped_auth_fail")
-	metricsTimestamp         = stats.NewRange32("metrics.timestamp.carbon") // min/max timestamps seen in each interval
+
+	metricsTSLock    = &sync.Mutex{}
+	metricsTimestamp = make(map[int]*stats.Range32)
 
 	carbonConnections = stats.NewGauge32("carbon.connections")
 
@@ -47,6 +50,17 @@ func init() {
 	flag.IntVar(&concurrency, "carbon-concurrency", 1, "number of goroutines for handling metrics")
 	flag.IntVar(&bufferSize, "carbon-buffer-size", 100000, "number of metrics to hold in an input buffer. Once this buffer fills metrics will be dropped")
 	flag.BoolVar(&nonBlockingBuffer, "carbon-non-blocking-buffer", false, "dont block trying to write to the input buffer, just drop metrics.")
+}
+
+func getMetricsTimestampStat(org int) *stats.Range32 {
+	metricsTSLock.Lock()
+	metricTimestamp, ok := metricsTimestamp[org]
+	if !ok {
+		metricTimestamp = stats.NewRange32(fmt.Sprintf("metrics.timestamp.carbon.%d", org)) // min/max timestamps seen in each interval
+		metricsTimestamp[org] = metricTimestamp
+	}
+	metricsTSLock.Unlock()
+	return metricTimestamp
 }
 
 type Carbon struct {
@@ -165,7 +179,8 @@ func (c *Carbon) flush() {
 				metricsRejected.Inc()
 				continue
 			}
-			metricsTimestamp.ValueUint32(uint32(md.Time))
+			metricTimestamp := getMetricsTimestampStat(user.ID)
+			metricTimestamp.ValueUint32(uint32(md.Time))
 			buf = append(buf, md)
 		}
 	}
