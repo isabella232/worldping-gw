@@ -21,13 +21,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/raintank/tsdb-gw/api/models"
 	"github.com/raintank/tsdb-gw/auth"
+	"github.com/raintank/tsdb-gw/ingest"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/macaron.v1"
 )
 
 var (
 	requestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "cortex_gw",
+		Namespace: "tsdb_gw",
 		Name:      "request_duration_seconds",
 		Help:      "Time (in seconds) spent serving HTTP requests.",
 		// github.com/weaveworks/common/instrument/instrument.DefBuckets
@@ -74,6 +75,7 @@ func GetContextHandler() macaron.Handler {
 func RequireAdmin() macaron.Handler {
 	return func(ctx *models.Context) {
 		if !ctx.IsAdmin {
+			log.Infof("HTTP auth: admin required but user %d is not admin -> 403", ctx.ID)
 			ctx.JSON(403, "Permision denied")
 		}
 	}
@@ -82,7 +84,7 @@ func RequireAdmin() macaron.Handler {
 func RequirePublisher() macaron.Handler {
 	return func(ctx *models.Context) {
 		if !ctx.Role.IsPublisher() {
-			log.Infof("user %v with role %v attempting to publish at %v", ctx.ID, ctx.Role, ctx.Req.RequestURI)
+			log.Infof("HTTP auth: user %v with role %v attempting to publish at %v -> 401", ctx.ID, ctx.Role, ctx.Req.RequestURI)
 			ctx.JSON(401, "Unauthorized to publish")
 			return
 		}
@@ -92,14 +94,24 @@ func RequirePublisher() macaron.Handler {
 func RequireViewer() macaron.Handler {
 	return func(ctx *models.Context) {
 		if !ctx.Role.IsViewer() {
-			log.Infof("user %v with role %v attempting to view at %v", ctx.ID, ctx.Role, ctx.Req.RequestURI)
+			log.Infof("HTTP auth: user %v with role %v attempting to view at %v -> 403", ctx.ID, ctx.Role, ctx.Req.RequestURI)
 			ctx.JSON(403, "Unauthorized to view")
 			return
 		}
 	}
 }
 
-func (a *Api) GenerateHandlers(kind string, enforceRoles bool, datadog bool, handlers ...macaron.Handler) []macaron.Handler {
+func IngestRateLimiter() macaron.Handler {
+	return func(ctx *models.Context) {
+		if !ingest.IsRateBudgetAvailable(ctx.Req.Context(), ctx.ID) {
+			log.Infof("HTTP ratelimiter: Rejecting request for %d due to rate limit -> 429", ctx.ID)
+			ctx.JSON(http.StatusTooManyRequests, "Rate limit is exhausted")
+			return
+		}
+	}
+}
+
+func (a *Api) GenerateHandlers(kind string, enforceRoles, datadog, rateLimit bool, handlers ...macaron.Handler) []macaron.Handler {
 	combinedHandlers := []macaron.Handler{}
 	if kind == "write" {
 		if datadog {
@@ -116,6 +128,11 @@ func (a *Api) GenerateHandlers(kind string, enforceRoles bool, datadog bool, han
 			combinedHandlers = append(combinedHandlers, RequirePublisher())
 		}
 	}
+
+	if ingest.UseRateLimit() && rateLimit {
+		combinedHandlers = append(combinedHandlers, IngestRateLimiter())
+	}
+
 	return append(combinedHandlers, handlers...)
 }
 
@@ -143,7 +160,7 @@ func (a *Api) Auth() macaron.Handler {
 	return func(ctx *models.Context) {
 		username, key := getAuthCreds(ctx.Req.Request)
 		if key == "" {
-			log.Debugf("no key specified")
+			log.Debugf("HTTP auth: no key specified -> 401")
 			ctx.JSON(401, "Unauthorized")
 			return
 		}
@@ -151,10 +168,11 @@ func (a *Api) Auth() macaron.Handler {
 		user, err := a.authPlugin.Auth(username, key)
 		if err != nil {
 			if err == auth.ErrInvalidCredentials || err == auth.ErrInvalidOrgId || err == auth.ErrInvalidInstanceID {
+				log.Infof("HTTP auth: %q -> 401", err.Error())
 				ctx.JSON(401, err.Error())
 				return
 			}
-			log.Errorf("failed to perform authentication: %q", err.Error())
+			log.Errorf("HTTP auth: failed to perform authentication: %q -> 500", err.Error())
 			ctx.JSON(500, err.Error())
 			return
 		}
@@ -192,7 +210,7 @@ func (a *Api) DDAuth() macaron.Handler {
 		}
 
 		if key == "" {
-			log.Debugf("no key specified")
+			log.Debugf("HTTP DDauth: no key specified -> 401")
 			ctx.JSON(401, "Unauthorized")
 			return
 		}
@@ -203,7 +221,7 @@ func (a *Api) DDAuth() macaron.Handler {
 				ctx.JSON(401, err.Error())
 				return
 			}
-			log.Errorf("failed to perform authentication: %q", err.Error())
+			log.Errorf("HTTP DDauth: failed to perform authentication: %q -> 500", err.Error())
 			ctx.JSON(500, err.Error())
 			return
 		}
@@ -358,7 +376,7 @@ func Tracer(componentName string) macaron.Handler {
 func CaptureBody(c *models.Context) {
 	body, err := ioutil.ReadAll(c.Req.Request.Body)
 	if err != nil {
-		log.Error(3, "HTTP internal error: failed to read request body for proxying: %s", err)
+		log.Error(3, "HTTP internal error: failed to read request body for proxying: %s -> 500", err)
 		c.PlainText(500, []byte("internal error: failed to read request body for proxying"))
 	}
 	c.Req.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))

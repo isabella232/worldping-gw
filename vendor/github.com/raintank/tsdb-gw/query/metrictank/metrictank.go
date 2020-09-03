@@ -1,6 +1,8 @@
 package metrictank
 
 import (
+	"context"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -24,14 +26,29 @@ func Init(metrictankUrl string) error {
 }
 
 func Proxy(orgId int, path string) *httputil.ReverseProxy {
-	director := func(req *http.Request) {
+	var mProxy httputil.ReverseProxy
+	mProxy.Director = func(req *http.Request) {
 		req.URL.Scheme = MetrictankUrl.Scheme
 		req.URL.Host = MetrictankUrl.Host
 		req.URL.Path = util.JoinUrlFragments(MetrictankUrl.Path, path)
 		req.Header.Del("X-Org-Id")
 		req.Header.Add("X-Org-Id", strconv.FormatInt(int64(orgId), 10))
 	}
-	return &httputil.ReverseProxy{Director: director}
+	mProxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, err error) {
+		if mProxy.ErrorLog != nil {
+			mProxy.ErrorLog.Printf("http: proxy error: %v", err)
+		} else {
+			log.Printf("http: proxy error: %v", err)
+		}
+
+		if req.Context().Err() == context.Canceled {
+			// if the client disconnected before the query was fully processed
+			rw.WriteHeader(499)
+		} else {
+			rw.WriteHeader(http.StatusBadGateway)
+		}
+	}
+	return &mProxy
 }
 
 func MetrictankProxy(path string) func(c *models.Context) {

@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	schema "github.com/raintank/schema"
+	schema "github.com/grafana/metrictank/schema"
 )
 
 // KeyCache tracks for all orgs, which keys have been seen, and when was the last time

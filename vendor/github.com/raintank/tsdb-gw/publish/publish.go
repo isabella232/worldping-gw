@@ -3,9 +3,9 @@ package publish
 import (
 	"strconv"
 
+	schema "github.com/grafana/metrictank/schema"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	schema "github.com/raintank/schema"
 	"github.com/raintank/tsdb-gw/metrics_client"
 	log "github.com/sirupsen/logrus"
 )

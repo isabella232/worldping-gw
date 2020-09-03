@@ -14,6 +14,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/singleflight"
 )
@@ -34,31 +35,9 @@ func init() {
 	flag.BoolVar(&validationDryRun, "auth-validation-dry-run", true, "if true, invalid instance type and cluster would just cause logging of the bad requests but not an actual failure of the request.")
 }
 
-type int64SliceFlag []int64
-
-func (i *int64SliceFlag) Set(value string) error {
-	for _, split := range strings.Split(value, ",") {
-		split = strings.TrimSpace(split)
-		if split == "" {
-			continue
-		}
-		parsed, err := strconv.Atoi(split)
-		if err != nil {
-			return err
-		}
-		*i = append(*i, int64(parsed))
-	}
-	return nil
-}
-
-func (i *int64SliceFlag) String() string {
-	// This is just a 1-liner to convert print a slice as a command separated list.
-	return strings.Trim(strings.Replace(fmt.Sprint(*i), " ", ", ", -1), "[]")
-}
-
 var (
 	authEndpoint      = "https://grafana.com"
-	validOrgIds       = int64SliceFlag{}
+	validOrgIds       = util.Int64SliceFlag{}
 	validInstanceType string
 	validClusterID    int
 	validationDryRun  bool
@@ -103,6 +82,9 @@ func validateToken(keyString string) (*SignedInUser, error) {
 
 	body, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
+	if err != nil {
+		return nil, err
+	}
 
 	if res.StatusCode >= 500 {
 		return nil, fmt.Errorf("Auth token could not be validated: %s", res.Status)
@@ -132,7 +114,7 @@ func validateToken(keyString string) (*SignedInUser, error) {
 	}
 
 	if !valid {
-		log.Debugln("Auth: orgID is not listed in auth-valid-org-id setting.")
+		log.Debugln("auth.gcom: orgID is not listed in auth-valid-org-id setting.")
 		return nil, ErrInvalidOrgId
 	}
 
@@ -154,10 +136,10 @@ func Auth(adminKey, keyString string) (*SignedInUser, error) {
 	user, cached := tokenCache.Get(keyString)
 	if cached {
 		if user != nil {
-			log.Debugln("Auth: valid key cached")
+			log.Debugln("auth.gcom: valid key cached")
 			return user, nil
 		}
-		log.Debugln("Auth: invalid key cached")
+		log.Debugln("auth.gcom: invalid key cached")
 		return nil, ErrInvalidApiKey
 	}
 
@@ -210,7 +192,7 @@ func validateInstance(instanceID, token string) error {
 	body, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 
-	log.Debugf("Auth: %s response was: %s", instanceUrl, body)
+	log.Debugf("auth.gcom: %s response was: %s", instanceUrl, body)
 
 	if res.StatusCode >= 500 {
 		return err
@@ -227,13 +209,13 @@ func validateInstance(instanceID, token string) error {
 	}
 
 	if strconv.Itoa(int(instance.ID)) != instanceID {
-		log.Errorf("Auth: instanceID returned from grafana.com doesnt match requested instanceID. %d != %s", instance.ID, instanceID)
+		log.Errorf("auth.gcom: instanceID returned from grafana.com doesnt match requested instanceID. %d != %s", instance.ID, instanceID)
 		return ErrInvalidInstanceID
 	}
 
 	if validInstanceType != "" && validInstanceType != instance.InstanceType {
 		validationFailed.WithLabelValues("instance").Inc()
-		log.Infof("Auth: user=%q instanceType returned from grafana.com doesnt match required instanceType. %s != %s", instanceID, instance.InstanceType, validInstanceType)
+		log.Infof("auth.gcom: user=%q instanceType returned from grafana.com doesnt match required instanceType. %s != %s", instanceID, instance.InstanceType, validInstanceType)
 
 		if !validationDryRun {
 			return ErrInvalidInstanceType
@@ -242,7 +224,7 @@ func validateInstance(instanceID, token string) error {
 
 	if validClusterID != 0 && validClusterID != instance.ClusterID {
 		validationFailed.WithLabelValues("cluster").Inc()
-		log.Infof("Auth: user=%q clusterID returned from grafana.com doesnt match required clusterID. %d != %d", instanceID, instance.ClusterID, validClusterID)
+		log.Infof("auth.gcom: user=%q clusterID returned from grafana.com doesnt match required clusterID. %d != %d", instanceID, instance.ClusterID, validClusterID)
 
 		if !validationDryRun {
 			return ErrInvalidCluster
@@ -258,15 +240,15 @@ func validateInstance(instanceID, token string) error {
 func (u *SignedInUser) CheckInstance(instanceID string) error {
 	cachekey := fmt.Sprintf("%s:%s", instanceID, u.key)
 	// check the cache
-	log.Debugln("Auth: Checking cache for instance")
+	log.Debugln("auth.gcom: Checking cache for instance")
 	valid, cached := instanceCache.Get(cachekey)
 	if cached {
 		if valid {
-			log.Debugln("Auth: valid instance key cached")
+			log.Debugln("auth.gcom: valid instance key cached")
 			return nil
 		}
 
-		log.Debugln("Auth: invalid instance key cached")
+		log.Debugln("auth.gcom: invalid instance key cached")
 		return ErrInvalidInstanceID
 	}
 

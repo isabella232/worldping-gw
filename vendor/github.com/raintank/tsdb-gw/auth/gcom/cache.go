@@ -122,7 +122,7 @@ func (c *TokenCache) validate(now time.Time) {
 			// we failed to validate the token.  Grafana.com might be down.
 			// The current TokenResp is kept, and we will try to validate it
 			// again in (cacheTTL/2)
-			log.Warnf("Could not validate token. %s", err)
+			log.Warnf("Auth: Could not validate token. %s", err)
 			continue
 		}
 		c.Lock()
@@ -227,7 +227,7 @@ func (c *InstanceCache) validate(now time.Time) {
 			// we failed to validate the token.  Grafana.com might be down.
 			// The current TokenResp is kept, and we will try to validate it
 			// again in (cacheTTL/2)
-			log.Warnf("Could not validate instanceID. %s", err)
+			log.Warnf("Auth: Could not validate instanceID. %s", err)
 			continue
 		}
 		c.Lock()

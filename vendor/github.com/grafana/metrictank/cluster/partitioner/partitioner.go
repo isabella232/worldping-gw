@@ -1,10 +1,7 @@
 package partitioner
 
 import (
-	"fmt"
-
-	"github.com/Shopify/sarama"
-	"github.com/raintank/schema"
+	"github.com/grafana/metrictank/schema"
 )
 
 type Partitioner interface {
@@ -12,41 +9,17 @@ type Partitioner interface {
 }
 
 type Kafka struct {
-	PartitionBy string
-	Partitioner sarama.Partitioner
+	Method schema.PartitionByMethod
 }
 
 func NewKafka(partitionBy string) (*Kafka, error) {
-	switch partitionBy {
-	case "byOrg":
-	case "bySeries":
-	default:
-		return nil, fmt.Errorf("partitionBy must be one of 'byOrg|bySeries'. got %s", partitionBy)
+	method, err := schema.PartitonMethodFromString(partitionBy)
+	if err != nil {
+		return nil, err
 	}
-	return &Kafka{
-		PartitionBy: partitionBy,
-		Partitioner: sarama.NewHashPartitioner(""),
-	}, nil
+	return &Kafka{Method: method}, err
 }
 
 func (k *Kafka) Partition(m schema.PartitionedMetric, numPartitions int32) (int32, error) {
-	key, err := k.GetPartitionKey(m, nil)
-	if err != nil {
-		return 0, err
-	}
-	return k.Partitioner.Partition(&sarama.ProducerMessage{Key: sarama.ByteEncoder(key)}, numPartitions)
-}
-
-func (k *Kafka) GetPartitionKey(m schema.PartitionedMetric, b []byte) ([]byte, error) {
-	switch k.PartitionBy {
-	case "byOrg":
-		// partition by organisation: metrics for the same org should go to the same
-		// partition/MetricTank (optimize for locality~performance)
-		return m.KeyByOrgId(b), nil
-	case "bySeries":
-		// partition by series: metrics are distrubted across all metrictank instances
-		// to allow horizontal scalability
-		return m.KeyBySeries(b), nil
-	}
-	return b, fmt.Errorf("unknown partitionBy setting.")
+	return m.PartitionID(k.Method, numPartitions)
 }

@@ -2,6 +2,7 @@ package graphite
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -19,11 +20,8 @@ import (
 var (
 	GraphiteUrl    *url.URL
 	WorldpingUrl   *url.URL
-	wpProxy        httputil.ReverseProxy
 	gProxy         httputil.ReverseProxy
 	timerangeLimit uint32
-
-	worldpingHack bool
 )
 
 type proxyRetryTransport struct {
@@ -97,6 +95,20 @@ func Init(graphiteUrl string, limit uint32) error {
 		req.URL.Host = GraphiteUrl.Host
 	}
 	gProxy.Transport = NewProxyRetrytransport()
+	gProxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, err error) {
+		if gProxy.ErrorLog != nil {
+			gProxy.ErrorLog.Printf("http: proxy error: %v", err)
+		} else {
+			log.Printf("http: proxy error: %v", err)
+		}
+
+		if req.Context().Err() == context.Canceled {
+			// if the client disconnected before the query was fully processed
+			rw.WriteHeader(499)
+		} else {
+			rw.WriteHeader(http.StatusBadGateway)
+		}
+	}
 
 	return nil
 }

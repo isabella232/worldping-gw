@@ -3,7 +3,7 @@ package keycache
 import (
 	"sync"
 
-	schema "github.com/raintank/schema"
+	schema "github.com/grafana/metrictank/schema"
 )
 
 // SubKey is the last 15 bytes of a 16 byte Key

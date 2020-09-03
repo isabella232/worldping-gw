@@ -39,7 +39,7 @@ func init() {
 }
 
 func NewFileAuth() *FileAuth {
-	log.Infof("loading carbon auth file from %s", filePath)
+	log.Infof("auth.file: loading carbon auth file from %s", filePath)
 	a := &FileAuth{
 		keys:        make(map[string]*User),
 		instanceMap: make(map[string]int),
@@ -48,7 +48,7 @@ func NewFileAuth() *FileAuth {
 
 	conf, err := ini.Load(filePath)
 	if err != nil {
-		log.Fatalf("could not load auth file: %v", filePath)
+		log.Fatalf("auth.file: could not load auth file: %v", filePath)
 	}
 
 	for _, section := range conf.Sections() {
@@ -98,7 +98,7 @@ func NewFileAuth() *FileAuth {
 		}
 	}
 	if len(a.keys) == 0 {
-		log.Fatalf("no auth credentials found in auth-file.")
+		log.Fatalf("auth.file: no auth credentials found in auth-file.")
 	}
 
 	return a
@@ -110,7 +110,7 @@ func (a *FileAuth) Auth(instanceID, password string) (*User, error) {
 	}
 	user, ok := a.keys[password]
 	if !ok {
-		log.Debugf("key not found: %v", password)
+		log.Debugf("auth.file: key not found: %v", password)
 		return nil, ErrInvalidCredentials
 	}
 
@@ -121,9 +121,11 @@ func (a *FileAuth) Auth(instanceID, password string) (*User, error) {
 	if instanceID != "api_key" {
 		ID, ok := a.instanceMap[instanceID]
 		if !ok {
+			log.Debugf("auth.file: instanceID %q not found", ID)
 			return nil, ErrInvalidInstanceID
 		}
 		if ID != user.ID {
+			log.Debugf("auth.file: user.ID %q does not match ID %q", user.ID, ID)
 			return nil, ErrInvalidInstanceID
 		}
 	}

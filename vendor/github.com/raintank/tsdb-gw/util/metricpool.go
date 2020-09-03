@@ -3,7 +3,7 @@ package util
 import (
 	"sync"
 
-	schema "github.com/raintank/schema"
+	schema "github.com/grafana/metrictank/schema"
 )
 
 type MetricDataPool struct {
